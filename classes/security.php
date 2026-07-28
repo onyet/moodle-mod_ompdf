@@ -44,11 +44,12 @@ class security {
      * @param int $ttl Lifetime in seconds (default 1800s / 30 mins)
      * @return string Base64 url-safe token
      */
-    public static function encrypt_url(string $data, int $ttl = 1800): string {
+    public static function encrypt_url(string $data, $cmid = 0, int $ttl = 1800): string {
         $key = self::get_secret_key();
         $iv = openssl_random_pseudo_bytes(16);
         $payload = json_encode([
             'url'  => $data,
+            'cmid' => (int)($cmid ?? 0),
             'exp'  => time() + $ttl,
             'salt' => bin2hex(openssl_random_pseudo_bytes(8))
         ]);
@@ -56,16 +57,22 @@ class security {
         $ciphertext = openssl_encrypt($payload, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
         $hmac = hash_hmac('sha256', $iv . $ciphertext, $key, true);
 
-        return base64_encode($iv . $hmac . $ciphertext);
+        $b64 = base64_encode($iv . $hmac . $ciphertext);
+        return str_replace(array('+', '/', '='), array('-', '_', ''), $b64);
     }
 
     /**
-     * Decrypt an AES-256 encrypted payload token.
+     * Decrypt an AES-256 encrypted payload token and return data array.
      *
      * @param string $token Encrypted token
-     * @return string|null Plaintext URL or null if invalid/expired
+     * @return array|null Array with 'url' and 'cmid' or null if invalid/expired
      */
-    public static function decrypt_url(string $token): ?string {
+    public static function decrypt_payload(string $token): ?array {
+        $token = str_replace(array('-', '_', ' '), array('+', '/', '+'), rawurldecode($token));
+        $mod4 = strlen($token) % 4;
+        if ($mod4) {
+            $token .= substr('====', $mod4);
+        }
         $raw = base64_decode($token);
         if (!$raw || strlen($raw) < 49) { // 16 IV + 32 HMAC + min ciphertext
             return null;
@@ -95,6 +102,17 @@ class security {
             return null; // Token expired
         }
 
-        return $data['url'];
+        return $data;
+    }
+
+    /**
+     * Decrypt an AES-256 encrypted payload token and return URL string.
+     *
+     * @param string $token Encrypted token
+     * @return string|null Plaintext URL or null if invalid/expired
+     */
+    public static function decrypt_url(string $token): ?string {
+        $payload = self::decrypt_payload($token);
+        return $payload ? $payload['url'] : null;
     }
 }

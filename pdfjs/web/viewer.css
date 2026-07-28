@@ -13,6 +13,31 @@
  * limitations under the License.
  */
 
+/* Enterprise DRM Read-Only Protection Rules */
+body.drm-protected #print,
+body.drm-protected #download,
+body.drm-protected #openFile,
+body.drm-protected #secondaryPrint,
+body.drm-protected #secondaryDownload,
+body.drm-protected #secondaryOpenFile,
+body.drm-protected #editorFreeText,
+body.drm-protected #editorInk,
+body.drm-protected #editorStamp,
+body.drm-protected button#print,
+body.drm-protected button#download,
+body.drm-protected button#openFile,
+body.drm-protected .toolbarButton.print,
+body.drm-protected .toolbarButton.download,
+body.drm-protected .secondaryToolbarButton.print,
+body.drm-protected .secondaryToolbarButton.download {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 :root {
   --highlight-bg-color: rgba(180, 0, 170, 1);
   --highlight-selected-bg-color: rgba(0, 100, 0, 1);
@@ -3577,4 +3602,56 @@ body.dark-theme .secondaryToolbar {
   color: #000;
   padding: 3rem;
   white-space: nowrap;
+  animation: ompdfWmDrift 8s ease-in-out infinite alternate;
+}
+
+/* OMPDF Anti-OBS Screen Recording Privacy Shield */
+#ompdfPrivacyShield {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(15, 23, 42, 0.96);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  backdrop-filter: blur(20px);
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
+  padding: 2rem;
+}
+
+#ompdfPrivacyShield h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+  color: #f43f5e;
+}
+
+#ompdfPrivacyShield p {
+  font-size: 1.1rem;
+  color: #94a3b8;
+  max-width: 520px;
+}
+
+.ompdf-privacy-blur {
+  filter: blur(24px) !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+@keyframes ompdfWmDrift {
+  0% {
+    transform: rotate(-25deg) translate(0, 0);
+  }
+  50% {
+    transform: rotate(-23deg) translate(12px, 8px);
+  }
+  100% {
+    transform: rotate(-27deg) translate(-8px, -12px);
+  }
 }

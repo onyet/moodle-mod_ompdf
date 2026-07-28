@@ -38,12 +38,25 @@ if (empty($token)) {
     exit;
 }
 
-$url = \mod_ompdf\security::decrypt_url($token);
+$payload = \mod_ompdf\security::decrypt_payload($token);
 
-if (!$url) {
+if (!$payload || empty($payload['url'])) {
     header('HTTP/1.1 403 Forbidden');
     echo json_encode(['error' => 'Invalid or expired security token']);
     exit;
+}
+
+$url = $payload['url'];
+
+if (!empty($payload['cmid'])) {
+    $cmid = (int)$payload['cmid'];
+    $cm = get_coursemodule_from_id('ompdf', $cmid, 0, false, IGNORE_MISSING);
+    if ($cm) {
+        $course = $DB->get_record('course', array('id' => $cm->course), '*', IGNORE_MISSING);
+        if ($course) {
+            require_login($course, true, $cm);
+        }
+    }
 }
 
 if (isset($_GET['json'])) {
@@ -63,11 +76,26 @@ if ($pos !== false) {
         $component = $parts[1];
         $filearea = $parts[2];
         $itemid = (int)$parts[3];
-        $filename = array_pop($parts);
-        $filepath = '/' . implode('/', array_slice($parts, 4)) . '/';
+        $filename = rawurldecode(array_pop($parts));
+        $filepath = '/' . trim(implode('/', array_slice($parts, 4)), '/');
+        if ($filepath !== '/') {
+            $filepath .= '/';
+        }
 
         $fs = get_file_storage();
         $storedfile = $fs->get_file($contextid, $component, $filearea, $itemid, $filepath, $filename);
+
+        if (!$storedfile) {
+            // Fallback match file in area by filename
+            $files = $fs->get_area_files($contextid, $component, $filearea, false, "id ASC", false);
+            foreach ($files as $f) {
+                if (!$f->is_directory() && $f->get_filename() === $filename) {
+                    $storedfile = $f;
+                    break;
+                }
+            }
+        }
+
         if ($storedfile && !$storedfile->is_directory()) {
             send_stored_file($storedfile, 86400, 0, false);
             exit;

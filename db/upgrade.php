@@ -42,11 +42,32 @@ function xmldb_ompdf_upgrade($oldversion) {
 
     $dbman = $DB->get_manager(); // Loads ddl manager and xmldb classes.
 
-    /*
-    if ($oldversion < 2013101800) {
-    }
-    */
+    if ($oldversion < 2026072800) {
+        $table = new xmldb_table('ompdf_analytics');
 
-    // Final return of upgrade result (true, all went good) to Moodle.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('ompdfid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('page', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('duration', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_index('ompdfid_user_page', XMLDB_INDEX_NOTUNIQUE, array('ompdfid', 'userid', 'page'));
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        $ompdf_table = new xmldb_table('ompdf');
+        $field = new xmldb_field('readonly_protection', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'openinnewtab');
+        if (!$dbman->field_exists($ompdf_table, $field)) {
+            $dbman->add_field($ompdf_table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2026072800, 'ompdf');
+    }
+
     return true;
 }

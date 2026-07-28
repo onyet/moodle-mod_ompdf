@@ -30,9 +30,9 @@ defined('MOODLE_INTERNAL') || die();
  **/
 class view_all extends \core\event\base {
     protected function init() {
-        $this->data['crud'] = 'c'; // c(reate), r(ead), u(pdate), d(elete)
+        $this->data['crud'] = 'r'; // c(reate), r(ead), u(pdate), d(elete)
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
-        $this->data['objecttable'] = 'omdf';
+        $this->data['objecttable'] = 'ompdf';
     }
  
     public static function get_name() {
@@ -40,11 +40,11 @@ class view_all extends \core\event\base {
     }
  
     public function get_description() {
-        return "The user with id {$this->relateduserid} has viewing all pdf file with course module id {$this->contextinstanceid}.";
+        return "The user with id '{$this->userid}' has viewed all ompdf activities in course with id '{$this->courseid}'.";
     }
  
     public function get_url() {
-        return new \moodle_url('/mod/ompdf/view.php', array('id' => $this->contextinstanceid));
+        return new \moodle_url('/mod/ompdf/index.php', array('id' => $this->courseid));
     }
  
     public function get_legacy_logdata() {

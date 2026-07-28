@@ -86,6 +86,13 @@ class mod_ompdf_mod_form extends moodleform_mod {
         $mform->addHelpButton('openinnewtab', 'openinnewtab', 'ompdf');
         $mform->setDefault('openinnewtab', $config->openinnewtab);
 
+        // Option for Read-Only DRM Protection.
+        $mform->addElement('advcheckbox',
+                           'readonly_protection',
+                           get_string('readonly_protection', 'ompdf'));
+        $mform->addHelpButton('readonly_protection', 'readonly_protection', 'ompdf');
+        $mform->setDefault('readonly_protection', 0);
+
         // Folder fields.
         $mform->addElement('header',
                            'pdf_fieldset',

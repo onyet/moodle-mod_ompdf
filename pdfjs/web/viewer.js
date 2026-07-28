@@ -539,7 +539,11 @@ const PDFViewerApplication = {
     const isEncrypted = params.get("enc") === "1";
     if (rawFile) {
       if (isEncrypted) {
-        file = "../../decrypt.php?token=" + encodeURIComponent(rawFile);
+        if (rawFile.indexOf("decrypt.php") !== -1) {
+          file = rawFile;
+        } else {
+          file = "../../decrypt.php?token=" + encodeURIComponent(rawFile);
+        }
       } else {
         try {
           file = atob(rawFile);
@@ -559,6 +563,25 @@ const PDFViewerApplication = {
 
     // Enterprise DRM Protections
     if (params.get("drm") === "1") {
+      if (document.body) document.body.classList.add("drm-protected");
+      if (document.documentElement) document.documentElement.classList.add("drm-protected");
+
+      const drmStyle = document.createElement("style");
+      drmStyle.textContent = `
+        #print, #download, #openFile, #secondaryPrint, #secondaryDownload, #secondaryOpenFile,
+        button#print, button#download, button#openFile,
+        .toolbarButton.print, .toolbarButton.download, .secondaryToolbarButton.print, .secondaryToolbarButton.download,
+        #editorFreeText, #editorInk, #editorStamp {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
+      `;
+      (document.head || document.documentElement).appendChild(drmStyle);
+
       document.addEventListener("contextmenu", function (e) { e.preventDefault(); }, false);
       document.addEventListener("keydown", function (e) {
         if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S')) {
@@ -566,10 +589,6 @@ const PDFViewerApplication = {
           e.stopPropagation();
         }
       }, true);
-      appConfig.toolbar?.print?.classList.add("hidden");
-      appConfig.toolbar?.download?.classList.add("hidden");
-      appConfig.secondaryToolbar?.printButton?.classList.add("hidden");
-      appConfig.secondaryToolbar?.downloadButton?.classList.add("hidden");
     }
 
     // Enterprise Tiled Watermark Pattern
@@ -612,14 +631,65 @@ const PDFViewerApplication = {
       });
     }
 
-    // Enterprise Auto-Bookmark & Learning Analytics Sync
+    // Enterprise Anti-OBS Screen Capture Protection & Privacy Shield
+    const drmParam = params.get("drm");
+    if (drmParam === "1") {
+      let privacyShield = document.getElementById("ompdfPrivacyShield");
+      if (!privacyShield) {
+        privacyShield = document.createElement("div");
+        privacyShield.id = "ompdfPrivacyShield";
+        privacyShield.style.display = "none";
+        privacyShield.innerHTML = '<h2>🔒 Protected Content</h2><p>Document content is obscured while window is unfocused or screen capture is active.</p>';
+        document.body.appendChild(privacyShield);
+      }
+      const showShield = function() {
+        const outer = document.getElementById("outerContainer");
+        if (outer) outer.classList.add("ompdf-privacy-blur");
+        privacyShield.style.display = "flex";
+      };
+      const hideShield = function() {
+        const outer = document.getElementById("outerContainer");
+        if (outer) outer.classList.remove("ompdf-privacy-blur");
+        privacyShield.style.display = "none";
+      };
+      window.addEventListener("blur", showShield);
+      window.addEventListener("focus", hideShield);
+      document.addEventListener("visibilitychange", function() {
+        if (document.hidden) {
+          showShield();
+        } else {
+          hideShield();
+        }
+      });
+    }
+
+    // Enterprise Auto-Bookmark & Learning Analytics Sync with Time-Spent Duration
     const cmidParam = params.get("cmid");
     if (cmidParam) {
       const cmid = parseInt(cmidParam, 10);
       const lastPageParam = params.get("lastpage") ? parseInt(params.get("lastpage"), 10) : 1;
-      let trackTimer = null;
+      let currentPage = 1;
+      let pageStartTime = Date.now();
+
+      const sendDuration = function(pageToTrack) {
+        if (!pageToTrack) return;
+        const now = Date.now();
+        const durationSec = Math.round((now - pageStartTime) / 1000);
+        if (durationSec >= 1) {
+          pageStartTime = now;
+          const total = PDFViewerApplication.pagesCount || 1;
+          const apiUrl = window.location.pathname.indexOf('/pdfjs/web/viewer.html') !== -1
+            ? window.location.pathname.replace(/\/pdfjs\/web\/viewer\.html.*/, '/api.php')
+            : '../../api.php';
+          fetch(apiUrl + '?action=track_progress&cmid=' + cmid + '&page=' + pageToTrack + '&total=' + total + '&duration=' + durationSec, {
+            credentials: 'same-origin'
+          }).catch(function(err) {});
+        }
+      };
 
       eventBus.on("pagesinit", function() {
+        currentPage = lastPageParam;
+        pageStartTime = Date.now();
         if (lastPageParam > 1) {
           setTimeout(function() {
             PDFViewerApplication.page = lastPageParam;
@@ -628,14 +698,22 @@ const PDFViewerApplication = {
       });
 
       eventBus.on("pagechanging", function(evt) {
-        if (trackTimer) clearTimeout(trackTimer);
-        trackTimer = setTimeout(function() {
-          const page = evt.pageNumber;
-          const total = PDFViewerApplication.pagesCount || 1;
-          fetch('../../api.php?action=track_progress&cmid=' + cmid + '&page=' + page + '&total=' + total, {
-            credentials: 'same-origin'
-          }).catch(function(err) {});
-        }, 1500);
+        const newPage = evt.pageNumber;
+        if (newPage !== currentPage) {
+          sendDuration(currentPage);
+          currentPage = newPage;
+        }
+      });
+
+      // Live pulse heartbeat every 5 seconds
+      setInterval(function() {
+        if (currentPage) {
+          sendDuration(currentPage);
+        }
+      }, 5000);
+
+      window.addEventListener("beforeunload", function() {
+        sendDuration(currentPage);
       });
     }
 

@@ -55,6 +55,15 @@ class mod_ompdf_renderer extends plugin_renderer_base {
         $output .= $this->output->header();
         $output .= $this->output->heading($name, 3);
 
+        $coursecontext = context_course::instance($cm->course);
+        if (has_capability('moodle/course:manageactivities', $context) || has_capability('mod/ompdf:addinstance', $coursecontext)) {
+            $analyticsurl = new moodle_url('/mod/ompdf/analytics.php', array('id' => $cm->id));
+            $output .= html_writer::div(
+                html_writer::link($analyticsurl, '📊 View Reading Analytics & Heatmap', array('class' => 'btn btn-outline-primary btn-sm mb-3')),
+                'text-right float-right mb-3'
+            );
+        }
+
         if (!empty($ompdf->get_instance()->intro)) {
             $output .= $this->output->box_start('generalbox boxaligncenter', 'intro');
             $output .= format_module_intro('ompdf',
@@ -157,11 +166,14 @@ class mod_ompdf_renderer extends plugin_renderer_base {
 
         $openinnewtab = $ompdf->get_instance()->openinnewtab;
         $showdownloadlinks = $ompdf->get_default_config()->showdownloadlinks;
+        $readonlyprotection = !empty($ompdf->get_instance()->readonly_protection);
 
         $output .= $this->htmlize_folder($tree,
                                          $toptree,
                                          $openinnewtab,
-                                         $showdownloadlinks);
+                                         $showdownloadlinks,
+                                         $cm,
+                                         $readonlyprotection);
 
         return $output;
     }
@@ -173,16 +185,21 @@ class mod_ompdf_renderer extends plugin_renderer_base {
      * @param array $dir
      * @param boolean $openinnewtab
      * @param boolean $showdownloadlinks
+     * @param cm_info|null $cm
+     * @param boolean $readonlyprotection
      * @return string HTML
      */
     protected function htmlize_folder($tree,
                                       $dir,
                                       $openinnewtab,
-                                      $showdownloadlinks) {
+                                      $showdownloadlinks,
+                                      $cm = null,
+                                      $readonlyprotection = false) {
         if (empty($dir['subdirs']) and empty($dir['files'])) {
             return '';
         }
 
+        $cmid = $cm ? (int)$cm->id : 0;
         $output = '<ul>';
 
         foreach ($dir['subdirs'] as $subdir) {
@@ -206,7 +223,9 @@ class mod_ompdf_renderer extends plugin_renderer_base {
             $childrenhtml = $this->htmlize_folder($tree,
                                                   $subdir,
                                                   $openinnewtab,
-                                                  $showdownloadlinks);
+                                                  $showdownloadlinks,
+                                                  $cm,
+                                                  $readonlyprotection);
 
             $detailshtml = html_writer::tag('details', $summaryhtml . $childrenhtml, array('class' => 'ompdf-folder-details', 'open' => 'open'));
 
@@ -255,13 +274,15 @@ class mod_ompdf_renderer extends plugin_renderer_base {
 
                 $params = array();
                 if ($enableenc !== '0') {
-                    $params['file'] = \mod_ompdf\security::encrypt_url($plainurl);
+                    $params['file'] = \mod_ompdf\security::encrypt_url($plainurl, (int)$cmid);
                     $params['enc'] = '1';
                 } else {
-                    $params['file'] = base64_encode($plainurl);
+                    $params['file'] = $plainurl;
                 }
 
-                if (!empty($disableprint)) {
+                $isreadonly = !empty($disableprint) || !empty($readonlyprotection);
+
+                if ($isreadonly) {
                     $params['drm'] = '1';
                 }
 
@@ -271,20 +292,25 @@ class mod_ompdf_renderer extends plugin_renderer_base {
                     $params['wm'] = urlencode($wmtext);
                 }
 
-                $params['cmid'] = $cm->id;
-                $lastpage = (int)get_user_preferences('mod_ompdf_lastpage_' . $cm->id, 1);
-                if ($lastpage > 1) {
-                    $params['lastpage'] = $lastpage;
+                if ($cmid > 0) {
+                    $params['cmid'] = $cmid;
+                    $lastpage = (int)get_user_preferences('mod_ompdf_lastpage_' . $cmid, 1);
+                    if ($lastpage > 1) {
+                        $params['lastpage'] = $lastpage;
+                    }
                 }
 
                 $url = new moodle_url($ompdfurl, $params);
                 $isimage = false;
             }
 
+            $linkoptions = array(
+                'class' => 'ompdf-preview-link',
+                'data-viewer-url' => $url->out(false),
+                'data-filename' => s($filename)
+            );
             if ($openinnewtab) {
-                $linkoptions = array('target' => '_blank');
-            } else {
-                $linkoptions = array();
+                $linkoptions['target'] = '_blank';
             }
 
             $fileicon = html_writer::tag(
@@ -296,11 +322,11 @@ class mod_ompdf_renderer extends plugin_renderer_base {
                 $fileicon . $filenamespan,
                 $linkoptions);
 
-            if (!$isimage && $showdownloadlinks) {
+            if (!$isimage && $showdownloadlinks && empty($isreadonly)) {
                 $downloadlink = html_writer::link(
                     $fileurlforcedownload,
                     get_string('downloadlinktext', 'ompdf'),
-                    $linkoptions);
+                    array('target' => '_blank'));
                 $filelink .= ' ' . html_writer::tag('em', '(' . $downloadlink . ')');
             }
 
@@ -337,6 +363,115 @@ class mod_ompdf_renderer extends plugin_renderer_base {
 
         // Close folder div.
         $output .= $this->output->container_end();
+
+        // OMPDF Quick Preview Modal Container
+        $output .= '
+        <div class="modal fade" id="ompdfPreviewModal" tabindex="-1" aria-labelledby="ompdfPreviewModalLabel" aria-hidden="true" style="z-index: 1055;">
+          <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 92vw; height: 90vh;">
+            <div class="modal-content" style="height: 100%; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.35); border: none;">
+              <div class="modal-header" style="background: #1e293b; color: #fff; padding: 0.75rem 1.25rem;">
+                <h5 class="modal-title d-flex align-items-center gap-2" id="ompdfPreviewModalLabel" style="font-size: 1.1rem; font-weight: 600; margin: 0;">
+                  <span>📄 PDF Quick Preview</span>
+                </h5>
+                <div class="d-flex align-items-center" style="gap: 10px;">
+                  <a id="ompdfOpenNewTabBtn" href="#" target="_blank" class="btn btn-sm btn-primary d-flex align-items-center gap-1" style="font-size: 0.85rem; font-weight: 500;">
+                    <span>↗️ Open Fullscreen in New Tab</span>
+                  </a>
+                  <button type="button" id="ompdfCloseModalBtn" class="btn btn-sm btn-outline-light" aria-label="Close" style="font-size: 1.1rem; font-weight: bold; line-height: 1; padding: 2px 8px; border-radius: 4px; cursor: pointer; color: #ffffff; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);">✕</button>
+                </div>
+              </div>
+              <div class="modal-body p-0" style="background: #0f172a; flex: 1; position: relative; height: calc(100% - 56px);">
+                <iframe id="ompdfPreviewIframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script>
+        (function() {
+            window.closeOmpdfModal = function() {
+                var modal = document.getElementById("ompdfPreviewModal");
+                var iframe = document.getElementById("ompdfPreviewIframe");
+                var backdrop = document.getElementById("ompdfModalBackdrop");
+
+                if (iframe) iframe.src = "";
+                if (modal) {
+                    modal.style.display = "none";
+                    modal.classList.remove("show");
+                }
+                if (backdrop) {
+                    backdrop.style.display = "none";
+                    backdrop.remove();
+                }
+                document.body.classList.remove("modal-open");
+            };
+
+            var initModal = function() {
+                var container = document.getElementById("' . $id . '");
+                if (!container) return;
+
+                container.addEventListener("click", function(e) {
+                    var link = e.target.closest(".ompdf-preview-link");
+                    if (!link) return;
+                    var viewerUrl = link.getAttribute("data-viewer-url");
+                    var filename = link.getAttribute("data-filename");
+                    if (!viewerUrl) return;
+
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    var modal = document.getElementById("ompdfPreviewModal");
+                    var iframe = document.getElementById("ompdfPreviewIframe");
+                    var openNewTabBtn = document.getElementById("ompdfOpenNewTabBtn");
+                    var titleEl = document.getElementById("ompdfPreviewModalLabel");
+
+                    if (modal && iframe) {
+                        iframe.src = viewerUrl;
+                        if (openNewTabBtn) openNewTabBtn.href = viewerUrl;
+                        if (titleEl) titleEl.textContent = "📄 " + (filename || "PDF Preview");
+
+                        modal.style.display = "block";
+                        modal.classList.add("show");
+                        document.body.classList.add("modal-open");
+
+                        var backdrop = document.getElementById("ompdfModalBackdrop");
+                        if (!backdrop) {
+                            backdrop = document.createElement("div");
+                            backdrop.id = "ompdfModalBackdrop";
+                            backdrop.className = "modal-backdrop fade show";
+                            document.body.appendChild(backdrop);
+                        }
+                        backdrop.style.display = "block";
+                    } else {
+                        window.open(viewerUrl, "_blank");
+                    }
+                }, true);
+            };
+
+            document.addEventListener("click", function(e) {
+                if (e.target.closest("#ompdfCloseModalBtn") || 
+                    e.target.closest("#ompdfOpenNewTabBtn") ||
+                    e.target.closest("#ompdfModalBackdrop") || 
+                    e.target.closest("[data-bs-dismiss=\"modal\"]") || 
+                    e.target.closest("[data-dismiss=\"modal\"]") ||
+                    (e.target.id === "ompdfPreviewModal")) {
+                    window.closeOmpdfModal();
+                }
+            });
+
+            document.addEventListener("keydown", function(e) {
+                if (e.key === "Escape" || e.keyCode === 27) {
+                    window.closeOmpdfModal();
+                }
+            });
+
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", initModal);
+            } else {
+                initModal();
+            }
+        })();
+        </script>
+        ';
 
         $showexpanded = true;
         if (empty($ompdf->get_instance()->showexpanded)) {

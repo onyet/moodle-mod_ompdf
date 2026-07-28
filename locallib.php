@@ -107,6 +107,7 @@ class ompdf {
         $add->display = $formdata->display;
         $add->showexpanded = $formdata->showexpanded;
         $add->openinnewtab = $formdata->openinnewtab;
+        $add->readonly_protection = !empty($formdata->readonly_protection) ? 1 : 0;
 
         $returnid = $DB->insert_record('ompdf', $add);
         $this->instance = $DB->get_record('ompdf',
@@ -165,6 +166,7 @@ class ompdf {
         $update->display = $formdata->display;
         $update->showexpanded = $formdata->showexpanded;
         $update->openinnewtab = $formdata->openinnewtab;
+        $update->readonly_protection = !empty($formdata->readonly_protection) ? 1 : 0;
 
         $result = $DB->update_record('ompdf', $update);
         $this->instance = $DB->get_record('ompdf',

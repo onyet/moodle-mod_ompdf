@@ -27,7 +27,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2026072800;       // The current module version (Date: YYYYMMDDXX)
+$plugin->version   = 2026072802;       // The current module version (Date: YYYYMMDDXX)
 $plugin->requires  = 2022112800;       // Requires Moodle 4.1 LTS or later
 $plugin->cron      = 0;
 $plugin->component = 'mod_ompdf';

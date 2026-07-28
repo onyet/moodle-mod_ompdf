@@ -30,8 +30,8 @@ require_course_login($course, true);
 $PAGE->set_pagelayout('incourse');
 
 $event = \mod_ompdf\event\view_all::create(array(
-    'objectid' => $objid,
-    'context' => context_module::instance($cmid)
+    'courseid' => $course->id,
+    'context' => context_course::instance($course->id)
 ));
 $event->trigger();
 
@@ -91,9 +91,12 @@ foreach ($pdffolders as $pdffolder) {
     $extra = empty($cm->extra) ? '' : $cm->extra;
     $icon = '';
     if (!empty($cm->icon)) {
-        $icon = '<img src="' . $OUTPUT->pix_url($cm->icon) .
-                '" class="activityicon" alt="' .
-                get_string('modulename', $cm->modname) . '" /> ';
+        $iconurl = method_exists($cm, 'get_icon_url') ? $cm->get_icon_url() : $OUTPUT->pix_url($cm->icon);
+        $icon = html_writer::empty_tag('img', array(
+            'src' => $iconurl,
+            'class' => 'activityicon',
+            'alt' => get_string('modulename', $cm->modname)
+        )) . ' ';
     }
     // Dim hidden modules.
     $class = $pdffolder->visible ? '' : 'class="dimmed"';

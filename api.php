@@ -22,10 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+define('AJAX_SCRIPT', true);
 require_once(dirname(__FILE__) . '/../../config.php');
-
-require_login();
-header('Content-Type: application/json');
 
 $action = required_param('action', PARAM_ALPHAEXT);
 $cmid   = required_param('cmid', PARAM_INT);
@@ -34,6 +32,7 @@ $cm     = get_coursemodule_from_id('ompdf', $cmid, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 $context = context_module::instance($cm->id);
 
+require_login($course, false, $cm);
 require_capability('mod/ompdf:view', $context);
 
 switch ($action) {
@@ -51,8 +50,34 @@ switch ($action) {
     case 'track_progress':
         $currentpage = required_param('page', PARAM_INT);
         $totalpages  = required_param('total', PARAM_INT);
+        $duration    = optional_param('duration', 0, PARAM_INT);
 
         set_user_preference('mod_ompdf_lastpage_' . $cm->id, $currentpage);
+
+        // Record time-spent reading duration per page in ompdf_analytics
+        if ($duration > 0 && $duration <= 3600 && $DB->get_manager()->table_exists('ompdf_analytics')) {
+            $now = time();
+            $record = $DB->get_record('ompdf_analytics', array(
+                'ompdfid' => $cm->instance,
+                'userid'  => $USER->id,
+                'page'    => $currentpage,
+            ));
+
+            if ($record) {
+                $record->duration += $duration;
+                $record->timemodified = $now;
+                $DB->update_record('ompdf_analytics', $record);
+            } else {
+                $newrec = new \stdClass();
+                $newrec->ompdfid = $cm->instance;
+                $newrec->userid  = $USER->id;
+                $newrec->page    = $currentpage;
+                $newrec->duration = $duration;
+                $newrec->timecreated = $now;
+                $newrec->timemodified = $now;
+                $DB->insert_record('ompdf_analytics', $newrec);
+            }
+        }
 
         // Auto activity completion trigger
         $completion = new \completion_info($course);
