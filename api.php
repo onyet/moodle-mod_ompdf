@@ -92,6 +92,71 @@ switch ($action) {
         echo json_encode(['status' => 'ok', 'progress' => $percentage, 'completed' => $iscompleted]);
         break;
 
+    case 'save_annotation':
+        $page    = required_param('page', PARAM_INT);
+        $content = required_param('content', PARAM_RAW);
+        $color   = optional_param('color', 'yellow', PARAM_ALPHA);
+        $type    = optional_param('type', 'student', PARAM_ALPHA);
+
+        $is_teacher = has_capability('moodle/course:manageactivities', $context);
+        if ($type === 'teacher' && !$is_teacher) {
+            $type = 'student';
+        }
+
+        $now = time();
+        $newann = new \stdClass();
+        $newann->ompdfid      = $cm->instance;
+        $newann->userid       = $USER->id;
+        $newann->page         = $page;
+        $newann->content      = $content;
+        $newann->color        = $color;
+        $newann->type         = $type;
+        $newann->timecreated  = $now;
+        $newann->timemodified = $now;
+
+        $newid = $DB->insert_record('ompdf_annotations', $newann);
+        $newann->id = $newid;
+        $newann->author = fullname($USER);
+        echo json_encode(['status' => 'ok', 'annotation' => $newann]);
+        break;
+
+    case 'get_annotations':
+        $page = optional_param('page', 0, PARAM_INT);
+        $params = array('ompdfid' => $cm->instance);
+        if ($page > 0) {
+            $params['page'] = $page;
+        }
+
+        $allrecords = array();
+        if ($DB->get_manager()->table_exists('ompdf_annotations')) {
+            $allrecords = $DB->get_records('ompdf_annotations', $params, 'timecreated ASC');
+        }
+
+        $result = array();
+        foreach ($allrecords as $rec) {
+            if ($rec->type === 'teacher' || $rec->userid == $USER->id) {
+                $userrec = $DB->get_record('user', array('id' => $rec->userid), 'id, firstname, lastname', IGNORE_MISSING);
+                $rec->author = $userrec ? fullname($userrec) : 'User';
+                $rec->is_owner = ($rec->userid == $USER->id);
+                $result[] = $rec;
+            }
+        }
+        echo json_encode(['status' => 'ok', 'annotations' => $result]);
+        break;
+
+    case 'delete_annotation':
+        $annid = required_param('id', PARAM_INT);
+        $ann = $DB->get_record('ompdf_annotations', array('id' => $annid, 'ompdfid' => $cm->instance), '*', MUST_EXIST);
+        $is_teacher = has_capability('moodle/course:manageactivities', $context);
+        if ($ann->userid == $USER->id || $is_teacher) {
+            $DB->delete_records('ompdf_annotations', array('id' => $annid));
+            echo json_encode(['status' => 'ok']);
+        } else {
+            http_response_code(403);
+            echo json_encode(['error' => 'Permission denied']);
+        }
+        break;
+
     default:
         http_response_code(400);
         echo json_encode(['error' => 'Unknown action']);

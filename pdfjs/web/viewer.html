@@ -290,13 +290,18 @@ See https://github.com/adobe-type-tools/cmap-resources
                   <button id="editorInk" class="toolbarButton" disabled="disabled" title="Draw" role="radio" aria-checked="false" aria-controls="editorInkParamsToolbar" tabindex="35" data-l10n-id="editor_ink2">
                     <span data-l10n-id="editor_ink2_label">Draw</span>
                   </button>
-                  <button id="editorStamp" class="toolbarButton hidden" disabled="disabled" title="Add or edit images" role="radio" aria-checked="false" aria-controls="editorStampParamsToolbar" tabindex="36" data-l10n-id="editor_stamp1">
+                  <button id="editorStamp" class="toolbarButton hidden" style="display:none !important;" disabled="disabled" title="Add or edit images" role="radio" aria-controls="editorStampParamsToolbar" tabindex="36" data-l10n-id="editor_stamp1">
                     <span data-l10n-id="editor_stamp1_label">Add or edit images</span>
                   </button>
                 </div>
 
-                <button id="themeToggle" class="toolbarButton themeToggle" title="Toggle Dark/Night Mode" tabindex="47">
-                  <span style="font-size:12px;font-weight:bold;line-height:24px;">🌙</span>
+                <button id="notesToggle" class="toolbarButton" title="Smart Notes & Annotations" tabindex="46" style="position:relative; overflow:visible;">
+                  <span>Smart Notes</span>
+                  <span id="notesBadge" style="display:none; background:#ef4444; color:#fff; font-size:8px; font-weight:800; border-radius:6px; padding:1px 3px; position:absolute; top:-4px; right:-4px; line-height:1.4; z-index:10; pointer-events:none; min-width:13px; min-height:13px; text-align:center; box-shadow:0 0 0 2px var(--toolbar-bg-color, #474747);">0</span>
+                </button>
+
+                <button id="themeToggle" class="toolbarButton" title="Toggle Dark/Night Mode" tabindex="47">
+                  <span>Night Mode</span>
                 </button>
 
                 <button id="secondaryToolbarToggle" class="toolbarButton" title="Tools" tabindex="48" data-l10n-id="tools" aria-expanded="false" aria-controls="secondaryToolbar">
@@ -482,6 +487,44 @@ See https://github.com/adobe-type-tools/cmap-resources
 
     </div> <!-- outerContainer -->
     <div id="printContainer"></div>
+
+    <div id="notesDrawer" class="notesDrawer hidden">
+      <div class="notesHeader">
+        <div class="notesHeaderTitle">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            <line x1="9" y1="9" x2="15" y2="9"></line>
+            <line x1="9" y1="13" x2="13" y2="13"></line>
+          </svg>
+          <span>Smart Notes & Hints</span>
+        </div>
+        <button id="closeNotesBtn" class="closeNotesBtn" title="Close Panel">✕</button>
+      </div>
+
+      <div class="notesSubHeader">
+        <span id="notesPageLabel" class="pagePill">PAGE 1</span>
+        <span id="notesCountHint" class="subHeaderHint">0 Notes</span>
+      </div>
+
+      <div id="notesList" class="notesList"></div>
+
+      <div class="notesInputArea">
+        <textarea id="noteInputText" placeholder="Write a note or hint for this page..." rows="2"></textarea>
+        <div class="notesControlRow">
+          <select id="noteTypeSelect" class="noteTypeSelect">
+            <option value="student">💡 Student Note</option>
+            <option value="teacher">⭐ Teacher Hint</option>
+          </select>
+          <select id="noteColorSelect" class="noteColorSelect">
+            <option value="yellow">🟡 Yellow</option>
+            <option value="green">🟢 Emerald</option>
+            <option value="blue">🔵 Sapphire</option>
+            <option value="pink">🔴 Rose</option>
+          </select>
+        </div>
+        <button id="saveNoteBtn" class="saveNoteBtn">✨ Save Note to Page</button>
+      </div>
+    </div>
 
     <input type="file" id="fileInput" class="hidden">
   </body>

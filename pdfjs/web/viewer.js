@@ -671,6 +671,10 @@ const PDFViewerApplication = {
       let currentPage = 1;
       let pageStartTime = Date.now();
 
+      const apiUrl = window.location.pathname.indexOf('/pdfjs/web/viewer.html') !== -1
+        ? window.location.pathname.replace(/\/pdfjs\/web\/viewer\.html.*/, '/api.php')
+        : '../../api.php';
+
       const sendDuration = function(pageToTrack) {
         if (!pageToTrack) return;
         const now = Date.now();
@@ -678,9 +682,6 @@ const PDFViewerApplication = {
         if (durationSec >= 1) {
           pageStartTime = now;
           const total = PDFViewerApplication.pagesCount || 1;
-          const apiUrl = window.location.pathname.indexOf('/pdfjs/web/viewer.html') !== -1
-            ? window.location.pathname.replace(/\/pdfjs\/web\/viewer\.html.*/, '/api.php')
-            : '../../api.php';
           fetch(apiUrl + '?action=track_progress&cmid=' + cmid + '&page=' + pageToTrack + '&total=' + total + '&duration=' + durationSec, {
             credentials: 'same-origin'
           }).catch(function(err) {});
@@ -690,9 +691,12 @@ const PDFViewerApplication = {
       eventBus.on("pagesinit", function() {
         currentPage = lastPageParam;
         pageStartTime = Date.now();
-        if (lastPageParam > 1) {
+        const maxPages = PDFViewerApplication.pagesCount || 1;
+        if (lastPageParam > 1 && lastPageParam <= maxPages) {
           setTimeout(function() {
-            PDFViewerApplication.page = lastPageParam;
+            try {
+              PDFViewerApplication.page = lastPageParam;
+            } catch (err) {}
           }, 300);
         }
       });
@@ -714,6 +718,156 @@ const PDFViewerApplication = {
 
       window.addEventListener("beforeunload", function() {
         sendDuration(currentPage);
+      });
+
+      // Enterprise Smart Notes & Hints Drawer Controller
+      const notesToggle = document.getElementById("notesToggle");
+      const notesBadge = document.getElementById("notesBadge");
+      const notesDrawer = document.getElementById("notesDrawer");
+      const closeNotesBtn = document.getElementById("closeNotesBtn");
+      const notesPageLabel = document.getElementById("notesPageLabel");
+      const notesList = document.getElementById("notesList");
+      const noteInputText = document.getElementById("noteInputText");
+      const noteTypeSelect = document.getElementById("noteTypeSelect");
+      const noteColorSelect = document.getElementById("noteColorSelect");
+      const saveNoteBtn = document.getElementById("saveNoteBtn");
+
+      const notesCountHint = document.getElementById("notesCountHint");
+
+      const loadAnnotations = function(page) {
+        if (!page) page = PDFViewerApplication.page || 1;
+        if (notesPageLabel) notesPageLabel.textContent = "PAGE " + page;
+
+        fetch(apiUrl + '?action=get_annotations&cmid=' + cmid + '&page=' + page, {
+          credentials: 'same-origin'
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'ok' && data.annotations) {
+            if (notesCountHint) {
+              notesCountHint.textContent = data.annotations.length + " " + (data.annotations.length === 1 ? 'Note' : 'Notes');
+            }
+            if (notesBadge) {
+              if (data.annotations.length > 0) {
+                notesBadge.textContent = data.annotations.length;
+                notesBadge.style.display = 'block';
+              } else {
+                notesBadge.style.display = 'none';
+              }
+            }
+
+            if (notesList) {
+              notesList.innerHTML = '';
+              if (data.annotations.length === 0) {
+                notesList.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; text-align:center; padding:20px 0;">No notes for page ' + page + ' yet. Type below to add one!</div>';
+              } else {
+                data.annotations.forEach(ann => {
+                  const card = document.createElement('div');
+                  const colorClass = ann.type === 'teacher' ? 'note-teacher' : 'note-' + (ann.color || 'yellow');
+                  card.className = 'noteCard ' + colorClass;
+
+                  const meta = document.createElement('div');
+                  meta.className = 'noteMeta';
+                  meta.innerHTML = '<span class="author">' + (ann.type === 'teacher' ? '⭐ Teacher Hint' : ann.author) + '</span>';
+                  if (ann.is_owner) {
+                    const del = document.createElement('button');
+                    del.className = 'delBtn';
+                    del.textContent = '✖';
+                    del.title = 'Delete Note';
+                    del.onclick = function() {
+                      fetch(apiUrl + '?action=delete_annotation&cmid=' + cmid + '&id=' + ann.id, { credentials: 'same-origin' })
+                      .then(() => loadAnnotations(page));
+                    };
+                    meta.appendChild(del);
+                  }
+                  card.appendChild(meta);
+
+                  const content = document.createElement('div');
+                  content.className = 'noteContent';
+                  content.textContent = ann.content;
+                  card.appendChild(content);
+
+                  notesList.appendChild(card);
+                });
+              }
+            }
+          }
+        })
+        .catch(() => {});
+      };
+
+      if (notesToggle) {
+        notesToggle.addEventListener("click", function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (notesDrawer) {
+            notesDrawer.classList.toggle("hidden");
+            if (!notesDrawer.classList.contains("hidden")) {
+              loadAnnotations(PDFViewerApplication.page || 1);
+            }
+          }
+        }, true);
+      }
+
+      if (closeNotesBtn) {
+        closeNotesBtn.addEventListener("click", function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (notesDrawer) {
+            notesDrawer.classList.add("hidden");
+          }
+        }, true);
+      }
+
+      if (saveNoteBtn) {
+        saveNoteBtn.onclick = function() {
+          const text = noteInputText.value.trim();
+          if (!text) return;
+          const page = PDFViewerApplication.page || 1;
+          const type = noteTypeSelect ? noteTypeSelect.value : 'student';
+          const color = noteColorSelect ? noteColorSelect.value : 'yellow';
+
+          saveNoteBtn.disabled = true;
+          saveNoteBtn.textContent = 'Saving...';
+
+          const formData = new FormData();
+          formData.append('action', 'save_annotation');
+          formData.append('cmid', cmid);
+          formData.append('page', page);
+          formData.append('content', text);
+          formData.append('type', type);
+          formData.append('color', color);
+
+          fetch(apiUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: formData
+          })
+          .then(res => res.json())
+          .then(data => {
+            saveNoteBtn.disabled = false;
+            saveNoteBtn.textContent = 'Save Note';
+            if (data.status === 'ok') {
+              noteInputText.value = '';
+              loadAnnotations(page);
+            } else {
+              alert(data.error || 'Failed to save note.');
+            }
+          })
+          .catch(err => {
+            saveNoteBtn.disabled = false;
+            saveNoteBtn.textContent = 'Save Note';
+            alert('Error saving note.');
+          });
+        };
+      }
+
+      eventBus.on("pagechanging", function(evt) {
+        loadAnnotations(evt.pageNumber);
+      });
+
+      eventBus.on("pagesinit", function() {
+        loadAnnotations(lastPageParam);
       });
     }
 
