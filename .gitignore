@@ -1,0 +1,74 @@
+# ====================
+# macOS
+# ====================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+
+# ====================
+# IDE & Editors
+# ====================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# ====================
+# PHP / Composer
+# ====================
+vendor/
+composer.phar
+/composer.lock
+
+# ====================
+# Node / NPM
+# ====================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+
+# ====================
+# Moodle local dev
+# ====================
+config.php
+moodle-plugin-ci.lock
+
+# ====================
+# Docker local volumes
+# ====================
+.docker/
+moodledata/
+mariadb_data/
+mysql_data/
+*.log
+
+# ====================
+# Build / Release artifacts
+# ====================
+*.zip
+*.tar.gz
+*.tar.bz2
+
+# ====================
+# Environment & Secrets
+# ====================
+.env
+.env.local
+.env.*.local
+
+# ====================
+# Temp / Cache
+# ====================
+*.tmp
+*.cache
+.cache/
