@@ -1,0 +1,79 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Direct Stream Zero-Latency Secure Token Resolution Endpoint for mod_ompdf.
+ *
+ * @package    mod_ompdf
+ * @copyright  2026 Dian Mukti Wibowo <onyetcorp@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+require_once(dirname(__FILE__) . '/../../config.php');
+require_once($CFG->libdir . '/filelib.php');
+
+require_login();
+
+$token = optional_param('token', '', PARAM_RAW);
+if (empty($token)) {
+    $token = optional_param('file', '', PARAM_RAW);
+}
+
+if (empty($token)) {
+    header('HTTP/1.1 400 Bad Request');
+    echo json_encode(['error' => 'Missing security token']);
+    exit;
+}
+
+$url = \mod_ompdf\security::decrypt_url($token);
+
+if (!$url) {
+    header('HTTP/1.1 403 Forbidden');
+    echo json_encode(['error' => 'Invalid or expired security token']);
+    exit;
+}
+
+if (isset($_GET['json'])) {
+    header('Content-Type: application/json');
+    echo json_encode(['url' => $url]);
+    exit;
+}
+
+// Direct stream optimization: extract pluginfile path to avoid 302 redirect
+$pluginfile_marker = '/pluginfile.php/';
+$pos = strpos($url, $pluginfile_marker);
+if ($pos !== false) {
+    $path = substr($url, $pos + strlen($pluginfile_marker));
+    $parts = explode('/', $path);
+    if (count($parts) >= 5) {
+        $contextid = (int)$parts[0];
+        $component = $parts[1];
+        $filearea = $parts[2];
+        $itemid = (int)$parts[3];
+        $filename = array_pop($parts);
+        $filepath = '/' . implode('/', array_slice($parts, 4)) . '/';
+
+        $fs = get_file_storage();
+        $storedfile = $fs->get_file($contextid, $component, $filearea, $itemid, $filepath, $filename);
+        if ($storedfile && !$storedfile->is_directory()) {
+            send_stored_file($storedfile, 86400, 0, false);
+            exit;
+        }
+    }
+}
+
+// Fallback if parsing fails or external URL
+redirect($url);

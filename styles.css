@@ -1,1 +1,87 @@
-.ompdf-onyet {}
+/* OMPDF Custom Styling for Moodle 4.x+ & Modern Platforms */
+
+.ompdf-onyet.filemanager {
+    font-family: inherit;
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: var(--bs-body-bg, #ffffff);
+    border: 1px solid var(--bs-border-color, #e9ecef);
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.ompdf-onyet.filemanager ul {
+    list-style: none;
+    padding-left: 1.25rem;
+    margin: 0.25rem 0;
+}
+
+.ompdf-onyet.filemanager > ul {
+    padding-left: 0;
+}
+
+.ompdf-onyet.filemanager li {
+    margin: 0.35rem 0;
+    line-height: 1.5;
+}
+
+.ompdf-folder-summary {
+    cursor: pointer;
+    font-weight: 600;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.ompdf-folder-summary:hover {
+    background-color: var(--bs-light, rgba(0, 0, 0, 0.05));
+}
+
+.ompdf-onyet .fp-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+}
+
+.ompdf-onyet .fp-filename-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.ompdf-onyet .fp-filename {
+    word-break: break-word;
+    color: var(--bs-body-color, #212529);
+}
+
+.ompdf-onyet a {
+    text-decoration: none;
+    color: var(--bs-link-color, #0f6cbf);
+    transition: color 0.15s ease-in-out;
+}
+
+.ompdf-onyet a:hover {
+    text-decoration: underline;
+    color: var(--bs-link-hover-color, #094478);
+}
+
+.ompdf-onyet em {
+    font-style: normal;
+    font-size: 0.875em;
+    opacity: 0.8;
+}
+
+/* Touch friendly target sizes for iOS / iPadOS / macOS */
+@media (max-width: 991px) {
+    .ompdf-onyet.filemanager li {
+        margin: 0.5rem 0;
+    }
+    .ompdf-folder-summary {
+        padding: 0.4rem 0.6rem;
+    }
+}

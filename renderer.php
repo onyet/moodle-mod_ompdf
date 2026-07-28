@@ -198,17 +198,19 @@ class mod_ompdf_renderer extends plugin_renderer_base {
                 'span',
                 s($subdir['dirname']),
                 array('class' => 'fp-filename'));
-            $divhtml = html_writer::tag(
-                'div',
+            $summaryhtml = html_writer::tag(
+                'summary',
                 $iconhtml . $namehtml ,
-                array('class' => 'fp-filename-icon'));
+                array('class' => 'fp-filename-icon ompdf-folder-summary'));
 
-            $output .= html_writer::tag(
-                'li',
-                $divhtml . $this->htmlize_folder($tree,
-                                                 $subdir,
-                                                 $openinnewtab,
-                                                 $showdownloadlinks));
+            $childrenhtml = $this->htmlize_folder($tree,
+                                                  $subdir,
+                                                  $openinnewtab,
+                                                  $showdownloadlinks);
+
+            $detailshtml = html_writer::tag('details', $summaryhtml . $childrenhtml, array('class' => 'ompdf-folder-details', 'open' => 'open'));
+
+            $output .= html_writer::tag('li', $detailshtml);
         }
 
         foreach ($dir['files'] as $pdf) {
@@ -245,10 +247,37 @@ class mod_ompdf_renderer extends plugin_renderer_base {
                                      'moodle');
                 $image = $this->output->render($icon);
 
-                $ompdfurl = new moodle_url(
-                    '/mod/ompdf/pdfjs/web/viewer.html');
-                $fileurl = urlencode(base64_encode($fileurl));
-                $url = $ompdfurl . '?file=' . $fileurl;
+                $ompdfurl = new moodle_url('/mod/ompdf/pdfjs/web/viewer.html');
+                $plainurl = $fileurl->out(false);
+                $enableenc = get_config('ompdf', 'enable_encryption');
+                $disableprint = get_config('ompdf', 'disable_print_save');
+                $enablewatermark = get_config('ompdf', 'enable_watermark');
+
+                $params = array();
+                if ($enableenc !== '0') {
+                    $params['file'] = \mod_ompdf\security::encrypt_url($plainurl);
+                    $params['enc'] = '1';
+                } else {
+                    $params['file'] = base64_encode($plainurl);
+                }
+
+                if (!empty($disableprint)) {
+                    $params['drm'] = '1';
+                }
+
+                if (!empty($enablewatermark)) {
+                    global $USER;
+                    $wmtext = fullname($USER) . ' | ' . get_remote_addr() . ' | ' . date('Y-m-d');
+                    $params['wm'] = urlencode($wmtext);
+                }
+
+                $params['cmid'] = $cm->id;
+                $lastpage = (int)get_user_preferences('mod_ompdf_lastpage_' . $cm->id, 1);
+                if ($lastpage > 1) {
+                    $params['lastpage'] = $lastpage;
+                }
+
+                $url = new moodle_url($ompdfurl, $params);
                 $isimage = false;
             }
 
@@ -314,8 +343,7 @@ class mod_ompdf_renderer extends plugin_renderer_base {
             $showexpanded = false;
         }
 
-        $this->page->requires->js_init_call('M.mod_ompdf.init_tree',
-                                            array($id, $showexpanded));
+        $this->page->requires->js_call_amd('mod_ompdf/tree', 'init', array($id, $showexpanded));
         return $output;
     }
 }

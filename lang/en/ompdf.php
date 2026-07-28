@@ -59,3 +59,11 @@ $string['openinnewtab_help'] = 'If enabled, PDFs will open in new tabs or window
 $string['showdownloadlinks'] = 'Show links for downloading PDFs';
 $string['showdownloadlinks_help'] = "If enabled, each PDF.js-based link will be followed by a link to download the PDF.\n\nThis can be useful on mobile devices where PDF.js may use too much memory or be too slow to work satisfactorily.";
 $string['eventviewall'] = "View All";
+
+$string['enable_encryption'] = 'Enable AES-256 URL Encryption';
+$string['enable_encryption_help'] = 'If enabled, PDF target URLs will be encrypted with AES-256-CBC and time-bound security tokens to prevent hotlinking and direct URL exposure.';
+$string['disable_print_save'] = 'Disable Print, Save & Context Menu (DRM Protection)';
+$string['disable_print_save_help'] = 'If enabled, keyboard shortcuts for print/save (Ctrl+P/S, Cmd+P/S) and right-click context menus are disabled inside the PDF viewer.';
+$string['enable_watermark'] = 'Enable Dynamic User Watermarking';
+$string['enable_watermark_help'] = 'If enabled, a translucent watermark containing the user\'s name, IP address, and date will be rendered across the PDF pages.';
+

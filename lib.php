@@ -55,8 +55,6 @@ function ompdf_supports($feature) {
             return false;
         case FEATURE_GROUPINGS:
             return false;
-        case FEATURE_GROUPMEMBERSONLY:
-            return true;
         case FEATURE_MOD_ARCHETYPE:
             return MOD_ARCHETYPE_RESOURCE;
         case FEATURE_MOD_INTRO:
@@ -79,7 +77,7 @@ function ompdf_supports($feature) {
  * @return int The instance id of the new ompdf instance
  */
 function ompdf_add_instance(stdClass $data,
-                                  mod_ompdf_mod_form $form = null) {
+                                  ?mod_ompdf_mod_form $form = null) {
     require_once(dirname(__FILE__) . '/locallib.php');
 
     $context = context_module::instance($data->coursemodule);
@@ -100,7 +98,7 @@ function ompdf_add_instance(stdClass $data,
  * @return boolean
  */
 function ompdf_update_instance(stdClass $data,
-                                     mod_ompdf_mod_form $form = null) {
+                                     ?mod_ompdf_mod_form $form = null) {
     require_once(dirname(__FILE__) . '/locallib.php');
 
     $context = context_module::instance($data->coursemodule);

@@ -27,10 +27,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2020110900;       // The current module version (Date: YYYYMMDDXX)
-$plugin->requires  = 2020110300;
-$plugin->cron     = 0;
+$plugin->version   = 2026072800;       // The current module version (Date: YYYYMMDDXX)
+$plugin->requires  = 2022112800;       // Requires Moodle 4.1 LTS or later
+$plugin->cron      = 0;
 $plugin->component = 'mod_ompdf';
-$plugin->release  = '1.02';
+$plugin->release   = '2.0.0';
 
 $feedback_version_intern = 1; //this version is used for restore older backups

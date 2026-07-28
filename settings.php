@@ -63,4 +63,25 @@ if ($ADMIN->fulltree) {
                                          get_string('openinnewtab', 'ompdf'),
                                          get_string('openinnewtab_help', 'ompdf'),
                                          1));
+
+    // AES-256 Encryption setting.
+    $settings->add(
+        new admin_setting_configcheckbox('ompdf/enable_encryption',
+                                         get_string('enable_encryption', 'ompdf'),
+                                         get_string('enable_encryption_help', 'ompdf'),
+                                         1));
+
+    // DRM protection setting (Disable print/save/contextmenu).
+    $settings->add(
+        new admin_setting_configcheckbox('ompdf/disable_print_save',
+                                         get_string('disable_print_save', 'ompdf'),
+                                         get_string('disable_print_save_help', 'ompdf'),
+                                         0));
+
+    // Dynamic Watermark setting.
+    $settings->add(
+        new admin_setting_configcheckbox('ompdf/enable_watermark',
+                                         get_string('enable_watermark', 'ompdf'),
+                                         get_string('enable_watermark_help', 'ompdf'),
+                                         0));
 }
