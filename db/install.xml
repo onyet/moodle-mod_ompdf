@@ -40,6 +40,7 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="ompdfid_user_page" UNIQUE="false" FIELDS="ompdfid, userid, page"/>
+      </INDEXES>
     </TABLE>
     <TABLE NAME="ompdf_annotations" COMMENT="Stores user and teacher notes and annotations per page">
       <FIELDS>
