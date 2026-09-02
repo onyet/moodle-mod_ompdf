@@ -1,4 +1,4 @@
-define(['core/log'], function(log) {
+define([], function() {
     'use strict';
 
     return {
@@ -18,11 +18,15 @@ define(['core/log'], function(log) {
             // Delegate click listener on container for all preview links
             container.addEventListener('click', function(e) {
                 var link = e.target.closest('.ompdf-preview-link');
-                if (!link) return;
+                if (!link) {
+                    return;
+                }
 
                 var viewerUrl = link.getAttribute('data-viewer-url');
                 var filename = link.getAttribute('data-filename');
-                if (!viewerUrl) return;
+                if (!viewerUrl) {
+                    return;
+                }
 
                 e.preventDefault();
                 e.stopPropagation();
@@ -34,8 +38,12 @@ define(['core/log'], function(log) {
 
                 if (modal && iframe) {
                     iframe.src = viewerUrl;
-                    if (openNewTabBtn) openNewTabBtn.href = viewerUrl;
-                    if (titleEl) titleEl.textContent = '📄 ' + (filename || 'PDF Preview');
+                    if (openNewTabBtn) {
+                        openNewTabBtn.href = viewerUrl;
+                    }
+                    if (titleEl) {
+                        titleEl.textContent = '📄 ' + (filename || 'PDF Preview');
+                    }
 
                     // Show modal via CSS classes and flex display
                     modal.style.display = 'block';
@@ -62,7 +70,9 @@ define(['core/log'], function(log) {
                 var iframe = document.getElementById('ompdfPreviewIframe');
                 var backdrop = document.getElementById('ompdfModalBackdrop');
 
-                if (iframe) iframe.src = '';
+                if (iframe) {
+                    iframe.src = '';
+                }
                 if (modal) {
                     modal.style.display = 'none';
                     modal.classList.remove('show');
@@ -74,10 +84,10 @@ define(['core/log'], function(log) {
             };
 
             document.addEventListener('click', function(e) {
-                if (e.target.closest('#ompdfCloseModalBtn') || 
+                if (e.target.closest('#ompdfCloseModalBtn') ||
                     e.target.closest('#ompdfOpenNewTabBtn') ||
-                    e.target.closest('#ompdfModalBackdrop') || 
-                    e.target.closest('[data-bs-dismiss="modal"]') || 
+                    e.target.closest('#ompdfModalBackdrop') ||
+                    e.target.closest('[data-bs-dismiss="modal"]') ||
                     e.target.closest('[data-dismiss="modal"]') ||
                     (e.target.id === 'ompdfPreviewModal')) {
                     closeModal();
