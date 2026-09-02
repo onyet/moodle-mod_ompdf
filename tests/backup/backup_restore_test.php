@@ -24,6 +24,8 @@
 
 namespace mod_ompdf\backup;
 
+defined('MOODLE_INTERNAL') || die();
+
 global $CFG;
 require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
 
