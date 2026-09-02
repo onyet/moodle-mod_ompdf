@@ -22,8 +22,16 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace mod_ompdf\backup;
+
+global $CFG;
+require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
+
 /**
  * Ensures both activity task classes are registered and extend Moodle APIs.
+ *
+ * @covers \backup_ompdf_activity_task
+ * @covers \restore_ompdf_activity_task
  */
 final class backup_restore_test extends \advanced_testcase {
     /**
@@ -32,6 +40,10 @@ final class backup_restore_test extends \advanced_testcase {
     public function test_activity_task_classes(): void {
         global $CFG;
 
+        require_once($CFG->dirroot . '/backup/moodle2/backup_stepslib.php');
+        require_once($CFG->dirroot . '/backup/moodle2/backup_activity_task.class.php');
+        require_once($CFG->dirroot . '/backup/moodle2/restore_stepslib.php');
+        require_once($CFG->dirroot . '/backup/moodle2/restore_activity_task.class.php');
         require_once($CFG->dirroot . '/mod/ompdf/backup/moodle2/backup_ompdf_activity_task.class.php');
         require_once($CFG->dirroot . '/mod/ompdf/backup/moodle2/restore_ompdf_activity_task.class.php');
 

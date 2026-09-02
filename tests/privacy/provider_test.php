@@ -29,6 +29,8 @@ use mod_ompdf\privacy\provider;
 
 /**
  * Tests for the OMPDF Privacy API provider.
+ *
+ * @covers \mod_ompdf\privacy\provider
  */
 final class provider_test extends \core_privacy\tests\provider_testcase {
     /**

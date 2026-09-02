@@ -164,9 +164,8 @@ class mod_ompdf_renderer extends plugin_renderer_base {
     /**
      * Utility function for creating the pdf folder HTML.
      *
-     * @param int $contextid
-     * @param ompdf $ompdf
-     * @param cm_info $cm
+     * @param ompdf $ompdf OMPDF instance.
+     * @param cm_info $cm Course module information.
      * @return string HTML
      */
     protected function get_pdf_folder_html(

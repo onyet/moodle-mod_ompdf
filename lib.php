@@ -70,8 +70,8 @@ function ompdf_supports($feature) {
 /**
  * Adds a ompdf instance.
  *
- * @param stdClass $data
- * @param mod_ompdf_mod_form $form
+ * @param stdClass $data Activity data.
+ * @param mod_ompdf_mod_form|null $form Activity form, if available.
  * @return int The instance id of the new ompdf instance
  */
 function ompdf_add_instance(
@@ -93,9 +93,9 @@ function ompdf_add_instance(
  * (defined by the form in mod_form.php) this function
  * will update an existing instance with new data.
  *
- * @param stdClass $data
- * @param mod_ompdf_mod_form $form
- * @return boolean
+ * @param stdClass $data Activity data.
+ * @param mod_ompdf_mod_form|null $form Activity form, if available.
+ * @return bool Whether the update succeeded.
  */
 function ompdf_update_instance(
     stdClass $data,

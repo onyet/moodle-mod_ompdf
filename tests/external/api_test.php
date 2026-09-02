@@ -28,6 +28,8 @@ use core_external\external_api;
 
 /**
  * Tests for the OMPDF external service contract.
+ *
+ * @covers \mod_ompdf\external\api
  */
 final class api_test extends \advanced_testcase {
     /**
