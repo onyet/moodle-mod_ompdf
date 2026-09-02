@@ -34,7 +34,7 @@ if (empty($token)) {
 
 if (empty($token)) {
     header('HTTP/1.1 400 Bad Request');
-    echo json_encode(['error' => 'Missing security token']);
+    echo json_encode(['error' => get_string('missing_security_token', 'ompdf')]);
     exit;
 }
 
@@ -42,22 +42,32 @@ $payload = \mod_ompdf\security::decrypt_payload($token);
 
 if (!$payload || empty($payload['url'])) {
     header('HTTP/1.1 403 Forbidden');
-    echo json_encode(['error' => 'Invalid or expired security token']);
+    echo json_encode(['error' => get_string('invalid_security_token', 'ompdf')]);
     exit;
 }
 
 $url = $payload['url'];
 
-if (!empty($payload['cmid'])) {
-    $cmid = (int)$payload['cmid'];
-    $cm = get_coursemodule_from_id('ompdf', $cmid, 0, false, IGNORE_MISSING);
-    if ($cm) {
-        $course = $DB->get_record('course', ['id' => $cm->course], '*', IGNORE_MISSING);
-        if ($course) {
-            require_login($course, true, $cm);
-        }
-    }
+$cmid = (int)($payload['cmid'] ?? 0);
+$cm = $cmid > 0
+    ? get_coursemodule_from_id('ompdf', $cmid, 0, false, IGNORE_MISSING)
+    : false;
+if (!$cm) {
+    header('HTTP/1.1 403 Forbidden');
+    echo json_encode(['error' => get_string('invalid_activity_token', 'ompdf')]);
+    exit;
 }
+
+$course = $DB->get_record('course', ['id' => $cm->course], '*', IGNORE_MISSING);
+if (!$course) {
+    header('HTTP/1.1 403 Forbidden');
+    echo json_encode(['error' => get_string('course_unavailable', 'ompdf')]);
+    exit;
+}
+
+require_login($course, true, $cm);
+$context = context_module::instance($cm->id);
+require_capability('mod/ompdf:view', $context);
 
 if (isset($_GET['json'])) {
     header('Content-Type: application/json');
