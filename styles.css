@@ -12,12 +12,12 @@
 
 .ompdf-onyet.filemanager ul {
     list-style: none;
-    padding-left: 1.25rem;
+    padding-inline-start: 1.25rem;
     margin: 0.25rem 0;
 }
 
 .ompdf-onyet.filemanager > ul {
-    padding-left: 0;
+    padding-inline-start: 0;
 }
 
 .ompdf-onyet.filemanager li {
@@ -44,7 +44,16 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-right: 0.5rem;
+    margin-inline-end: 0.5rem;
+}
+
+.ompdf-onyet {
+    direction: inherit;
+}
+
+.ompdf-onyet .ompdf-analytics-link {
+    float: inline-end;
+    text-align: end;
 }
 
 .ompdf-onyet .fp-filename-icon {

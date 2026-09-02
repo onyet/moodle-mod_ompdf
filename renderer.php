@@ -65,7 +65,7 @@ class mod_ompdf_renderer extends plugin_renderer_base {
                     get_string('analyticslink', 'ompdf'),
                     ['class' => 'btn btn-outline-primary btn-sm mb-3']
                 ),
-                'text-right float-right mb-3'
+                'ompdf-analytics-link mb-3'
             );
         }
 
