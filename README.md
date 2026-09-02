@@ -41,6 +41,12 @@
 - One-click toggle between light and dark theme
 - Preference persisted in `localStorage`
 
+### 🌍 Languages
+- English (`en`) and Indonesian (`id`) are maintained in the repository.
+- Additional starter translations are included for Simplified Chinese (`zh_cn`), Arabic (`ar`), German (`de`), Dutch (`nl`), and Japanese (`ja`).
+- Missing translations fall back to English, as supported by Moodle's language system.
+- Arabic uses Moodle's RTL page direction and logical CSS properties for the OMPDF layout.
+
 ### 🧩 Moodle integration
 - Supports Moodle activity backup and restore.
 - Implements the null Privacy API provider because OMPDF does not export personal data.
@@ -136,6 +142,12 @@ See [README_DOCKER.md](README_DOCKER.md) for full setup instructions.
 ---
 
 ## 📜 Changelog
+
+### v2.2.0 (2026-09-03)
+- ✅ Added Chinese, Arabic, German, Dutch, and Japanese language packs
+- ✅ Added Arabic RTL layout support
+- ✅ Completed Indonesian Privacy API strings
+- ✅ Added production compliance tests and updated Moodle documentation
 
 ### v2.1.0 (2026-07-29)
 - ✨ Smart Notes & Hints system with side drawer and notification badge
