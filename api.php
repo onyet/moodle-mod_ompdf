@@ -94,7 +94,7 @@ switch ($action) {
 
     case 'save_annotation':
         $page    = required_param('page', PARAM_INT);
-        $content = required_param('content', PARAM_RAW);
+        $content = required_param('content', PARAM_TEXT);
         $color   = optional_param('color', 'yellow', PARAM_ALPHA);
         $type    = optional_param('type', 'student', PARAM_ALPHA);
 

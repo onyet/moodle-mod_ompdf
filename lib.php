@@ -140,9 +140,9 @@ function ompdf_delete_instance($id) {
  *
  * Used for user activity reports.
  *
- * @param stdClass $course
- * @param stdClass $user
- * @param stdClass $coursemodule
+ * @param stdClass $course Course object.
+ * @param stdClass $user User object.
+ * @param stdClass $mod Course module object.
  * @param stdClass $ompdf
  * @return stdClass|null [->time and ->info: short text description]
  */
@@ -219,7 +219,7 @@ function ompdf_get_extra_capabilities() {
  * "extra" information that may be needed when printing
  * this activity in a course listing.
  *
- * See {@link get_array_of_activities()} in course/lib.php
+ * See {@see get_array_of_activities()} in course/lib.php.
  *
  * @param cm_info $cm
  * @return cached_cm_info An object on information that the courses
@@ -280,7 +280,7 @@ function ompdf_get_post_actions() {
  * Returns the lists of all browsable file areas within the given module context
  *
  * The file area 'intro' for the activity introduction field is added automatically
- * by {@link file_browser::get_file_info_context_module()}
+ * by {@see file_browser::get_file_info_context_module()}.
  *
  * @param stdClass $course
  * @param stdClass $cm
@@ -430,7 +430,7 @@ function ompdf_pluginfile(
 /**
  * This function is used by the reset_course_userdata function in moodlelib.
  *
- * @param $data The data submitted from the reset course.
+ * @param stdClass $data The data submitted from the reset course.
  * @return array Status array
  */
 function ompdf_reset_userdata($data) {

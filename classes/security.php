@@ -41,7 +41,8 @@ class security {
     /**
      * Encrypt a target file URL or string using AES-256-CBC with HMAC-SHA256 signature.
      *
-     * @param string $data Plaintext file URL
+     * @param string $data Plaintext file URL.
+     * @param int $cmid Course module ID.
      * @param int $ttl Lifetime in seconds (default 1800s / 30 mins)
      * @return string Base64 url-safe token
      */

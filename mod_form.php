@@ -145,7 +145,7 @@ class mod_ompdf_mod_form extends moodleform_mod {
     /**
      * Prepares the form before data are set.
      *
-     * @param array $data to be set
+     * @param array $defaultvalues Form values to be set.
      * @return void
      */
     public function data_preprocessing(&$defaultvalues) {

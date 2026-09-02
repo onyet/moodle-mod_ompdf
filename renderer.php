@@ -33,8 +33,9 @@ class mod_ompdf_renderer extends plugin_renderer_base {
     /**
      * Renders the ompdf page header.
      *
-     * @param ompdf ompdf
-     * @return string
+     * @param ompdf $ompdf OMPDF instance.
+     * @param cm_info $cm Course module information.
+     * @return string Rendered page header.
      */
     public function pdf_header($ompdf, cm_info $cm) {
         $output = '';
@@ -82,7 +83,7 @@ class mod_ompdf_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Render the footer
+     * Render the footer.
      *
      * @return string
      */
@@ -91,9 +92,9 @@ class mod_ompdf_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Render the ompdf page
+     * Render the ompdf page.
      *
-     * @param ompdf ompdf
+     * @param ompdf $ompdf OMPDF instance.
      * @return string The page output.
      */
     public function render_ompdf($ompdf) {

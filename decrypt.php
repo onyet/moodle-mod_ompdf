@@ -27,9 +27,9 @@ require_once($CFG->libdir . '/filelib.php');
 
 require_login();
 
-$token = optional_param('token', '', PARAM_RAW);
+$token = optional_param('token', '', PARAM_ALPHANUMEXT);
 if (empty($token)) {
-    $token = optional_param('file', '', PARAM_RAW);
+    $token = optional_param('file', '', PARAM_URL);
 }
 
 if (empty($token)) {
