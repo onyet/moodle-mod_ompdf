@@ -59,12 +59,22 @@ if ($DB->get_manager()->table_exists('ompdf_analytics')) {
 }
 
 // Ensure any active reader appears in the analytics table.
+$activeuserids = [];
 foreach ($records as $rec) {
     if (!isset($students[$rec->userid])) {
-        $u = $DB->get_record('user', ['id' => $rec->userid], 'id, firstname, lastname, email', IGNORE_MISSING);
-        if ($u) {
-            $students[$rec->userid] = $u;
-        }
+        $activeuserids[$rec->userid] = (int)$rec->userid;
+    }
+}
+if ($activeuserids) {
+    $activeusers = $DB->get_records_list(
+        'user',
+        'id',
+        array_values($activeuserids),
+        '',
+        'id, firstname, lastname, email'
+    );
+    foreach ($activeusers as $activeuser) {
+        $students[$activeuser->id] = $activeuser;
     }
 }
 

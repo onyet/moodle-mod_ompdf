@@ -132,10 +132,24 @@ switch ($action) {
             $allrecords = $DB->get_records('ompdf_annotations', $params, 'timecreated ASC');
         }
 
+        $annotationuserids = [];
+        foreach ($allrecords as $record) {
+            if ($record->type === 'teacher' || $record->userid == $USER->id) {
+                $annotationuserids[$record->userid] = (int)$record->userid;
+            }
+        }
+        $annotationusers = $annotationuserids ? $DB->get_records_list(
+            'user',
+            'id',
+            array_values($annotationuserids),
+            '',
+            'id, firstname, lastname'
+        ) : [];
+
         $result = [];
         foreach ($allrecords as $rec) {
             if ($rec->type === 'teacher' || $rec->userid == $USER->id) {
-                $userrec = $DB->get_record('user', ['id' => $rec->userid], 'id, firstname, lastname', IGNORE_MISSING);
+                $userrec = $annotationusers[$rec->userid] ?? null;
                 $rec->author = $userrec ? fullname($userrec) : 'User';
                 $rec->is_owner = ($rec->userid == $USER->id);
                 $result[] = $rec;
