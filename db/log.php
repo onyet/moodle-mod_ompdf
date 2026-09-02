@@ -24,9 +24,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$logs = array(
-    array('module' => 'ompdf', 'action' => 'add', 'mtable' => 'ompdf', 'field' => 'name'),
-    array('module' => 'ompdf', 'action' => 'update', 'mtable' => 'ompdf', 'field' => 'name'),
-    array('module' => 'ompdf', 'action' => 'view', 'mtable' => 'ompdf', 'field' => 'name'),
-    array('module' => 'ompdf', 'action' => 'view all', 'mtable' => 'ompdf', 'field' => 'name')
-);
+$logs = [
+    ['module' => 'ompdf', 'action' => 'add', 'mtable' => 'ompdf', 'field' => 'name'],
+    ['module' => 'ompdf', 'action' => 'update', 'mtable' => 'ompdf', 'field' => 'name'],
+    ['module' => 'ompdf', 'action' => 'view', 'mtable' => 'ompdf', 'field' => 'name'],
+    ['module' => 'ompdf', 'action' => 'view all', 'mtable' => 'ompdf', 'field' => 'name'],
+];

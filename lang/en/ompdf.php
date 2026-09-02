@@ -69,4 +69,3 @@ $string['disable_print_save'] = 'Disable Print, Save & Context Menu (DRM Protect
 $string['disable_print_save_help'] = 'If enabled, keyboard shortcuts for print/save (Ctrl+P/S, Cmd+P/S) and right-click context menus are disabled inside the PDF viewer.';
 $string['enable_watermark'] = 'Enable Dynamic User Watermarking';
 $string['enable_watermark_help'] = 'If enabled, a translucent watermark containing the user\'s name, IP address, and date will be rendered across the PDF pages.';
-
