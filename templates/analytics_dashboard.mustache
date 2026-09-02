@@ -1,0 +1,58 @@
+{{!
+    @template mod_ompdf/analytics_dashboard
+
+    Analytics dashboard.
+
+    Example context (json):
+    {
+        "title": "Analytics",
+        "exporturl": "analytics.php?export=csv",
+        "cards": [],
+        "heatmap": {},
+        "students": [],
+        "headers": ["Name", "Email", "Pages", "Duration", "Last active"]
+    }
+}}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{title}}</h2>
+    <a href="{{exporturl}}" class="btn btn-primary">{{exportlabel}}</a>
+</div>
+
+<div class="row mb-4">
+    {{#cards}}
+    <div class="col-md-4">
+        <div class="card text-white {{colour}} mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{label}}</h5>
+                <p class="card-text display-4">{{value}}</p>
+            </div>
+        </div>
+    </div>
+    {{/cards}}
+</div>
+
+<div class="card mb-4">
+    <div class="card-header font-weight-bold">{{heatmaptitle}}</div>
+    <div class="card-body">{{#heatmap}}{{> mod_ompdf/analytics_heatmap}}{{/heatmap}}</div>
+</div>
+
+<div class="card">
+    <div class="card-header font-weight-bold">{{studenttitle}}</div>
+    <div class="card-body">
+        <table class="generaltable mod_index">
+            <thead><tr>{{#headers}}<th>{{.}}</th>{{/headers}}</tr></thead>
+            <tbody>
+                {{#students}}
+                <tr>
+                    <td>{{name}}</td>
+                    <td>{{email}}</td>
+                    <td>{{#haspages}}<span class="badge bg-success">{{pages}}</span>{{/haspages}}
+                        {{^haspages}}<span class="badge bg-secondary">{{pages}}</span>{{/haspages}}</td>
+                    <td>{{duration}}</td>
+                    <td>{{lastactive}}</td>
+                </tr>
+                {{/students}}
+            </tbody>
+        </table>
+    </div>
+</div>

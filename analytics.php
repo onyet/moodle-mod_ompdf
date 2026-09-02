@@ -146,18 +146,6 @@ $PAGE->set_title(get_string('analytics_title', 'ompdf', format_string($ompdf->na
 $PAGE->set_heading($course->fullname);
 $PAGE->set_pagelayout('incourse');
 
-echo $OUTPUT->header();
-
-// Page header and controls.
-echo html_writer::start_div('d-flex justify-content-between align-items-center mb-4');
-echo html_writer::tag('h2', get_string('analytics_title', 'ompdf', format_string($ompdf->name)));
-echo html_writer::link(
-    new moodle_url('/mod/ompdf/analytics.php', ['id' => $cm->id, 'export' => 'csv']),
-    get_string('export_report', 'ompdf'),
-    ['class' => 'btn btn-primary']
-);
-echo html_writer::end_div();
-
 // Summary cards.
 $totalreaders = count($studentdata);
 $totalseconds = 0;
@@ -167,106 +155,81 @@ foreach ($studentdata as $sd) {
 $avgduration = $totalreaders > 0 ? round($totalseconds / $totalreaders) : 0;
 $avgformatted = sprintf('%02dm %02ds', floor($avgduration / 60), $avgduration % 60);
 
-echo html_writer::start_div('row mb-4');
-    echo html_writer::div(
-        html_writer::div(html_writer::tag('h5', get_string('total_active_readers', 'ompdf'), ['class' => 'card-title'])
-        . html_writer::tag('p', $totalreaders, ['class' => 'card-text display-4']), 'card-body'),
-        'card text-white bg-info mb-3'
-    );
-    echo html_writer::div(
-        html_writer::div(html_writer::tag('h5', get_string('total_cumulative_time', 'ompdf'), ['class' => 'card-title'])
-        . html_writer::tag(
-            'p',
-            sprintf('%02dh %02dm', floor($totalseconds / 3600), floor(($totalseconds % 3600) / 60)),
-            ['class' => 'card-text display-4']
-        ), 'card-body'),
-        'card text-white bg-success mb-3'
-    );
-    echo html_writer::div(
-        html_writer::div(html_writer::tag('h5', get_string('average_time_per_student', 'ompdf'), ['class' => 'card-title'])
-        . html_writer::tag('p', $avgformatted, ['class' => 'card-text display-4']), 'card-body'),
-        'card text-white bg-dark mb-3'
-    );
-    echo html_writer::end_div();
+// Prepare summary card data.
+$cards = [
+    ['label' => get_string('total_active_readers', 'ompdf'), 'value' => $totalreaders, 'colour' => 'bg-info'],
+    ['label' => get_string('total_cumulative_time', 'ompdf'),
+        'value' => sprintf('%02dh %02dm', floor($totalseconds / 3600), floor(($totalseconds % 3600) / 60)),
+        'colour' => 'bg-success'],
+    ['label' => get_string('average_time_per_student', 'ompdf'), 'value' => $avgformatted, 'colour' => 'bg-dark'],
+];
 
-    // Reading heatmap section.
-    echo html_writer::start_div('card mb-4');
-    echo html_writer::div(get_string('page_reading_heatmap', 'ompdf'), 'card-header font-weight-bold');
-    echo html_writer::start_div('card-body');
-
-    $heatmapdata = ['hasdata' => !empty($pageheatmap), 'rows' => [],
-        'nodata' => get_string('no_reading_analytics', 'ompdf')];
-    if (!empty($pageheatmap)) {
-        $maxduration = 1;
-        foreach ($pageheatmap as $ph) {
-            if ($ph['total_duration'] > $maxduration) {
-                $maxduration = $ph['total_duration'];
-            }
-        }
-
-        foreach ($pageheatmap as $page => $pdata) {
-            $pct = round(($pdata['total_duration'] / $maxduration) * 100);
-            $readercount = count($pdata['readers']);
-            $durformatted = sprintf('%02dm %02ds', floor($pdata['total_duration'] / 60), $pdata['total_duration'] % 60);
-
-            // Set heatmap intensity color.
-            $color = '#3b82f6';
-            if ($pct > 75) {
-                $color = '#ef4444';
-            } else if ($pct > 40) {
-                $color = '#f59e0b';
-            }
-
-            $heatmapdata['rows'][] = [
-                'page' => get_string('page', 'ompdf', $page),
-                'width' => max($pct, 4),
-                'color' => $color,
-                'duration' => $durformatted,
-                'readers' => get_string('readers', 'ompdf', $readercount),
-            ];
+// Reading heatmap section.
+$heatmapdata = ['hasdata' => !empty($pageheatmap), 'rows' => [],
+    'nodata' => get_string('no_reading_analytics', 'ompdf')];
+if (!empty($pageheatmap)) {
+    $maxduration = 1;
+    foreach ($pageheatmap as $ph) {
+        if ($ph['total_duration'] > $maxduration) {
+            $maxduration = $ph['total_duration'];
         }
     }
-    echo $OUTPUT->render_from_template('mod_ompdf/analytics_heatmap', $heatmapdata);
-    echo html_writer::end_div();
-    echo html_writer::end_div();
 
-    // Student engagement table.
-    echo html_writer::start_div('card');
-    echo html_writer::div(get_string('student_engagement', 'ompdf'), 'card-header font-weight-bold');
-    echo html_writer::start_div('card-body');
+    foreach ($pageheatmap as $page => $pdata) {
+        $pct = round(($pdata['total_duration'] / $maxduration) * 100);
+        $readercount = count($pdata['readers']);
+        $durformatted = sprintf('%02dm %02ds', floor($pdata['total_duration'] / 60), $pdata['total_duration'] % 60);
 
-    $table = new html_table();
-    $table->attributes['class'] = 'generaltable mod_index';
-    $table->head = [
+        // Set heatmap intensity color.
+        $color = '#3b82f6';
+        if ($pct > 75) {
+            $color = '#ef4444';
+        } else if ($pct > 40) {
+            $color = '#f59e0b';
+        }
+
+        $heatmapdata['rows'][] = [
+            'page' => get_string('page', 'ompdf', $page),
+            'width' => max($pct, 4),
+            'color' => $color,
+            'duration' => $durformatted,
+            'readers' => get_string('readers', 'ompdf', $readercount),
+        ];
+    }
+}
+$studentsdata = [];
+foreach ($students as $student) {
+    $sdata = $studentdata[$student->id] ?? ['pages' => [], 'total_duration' => 0, 'last_modified' => 0];
+    $pagesread = count($sdata['pages']);
+    $totalsec = $sdata['total_duration'];
+    $studentsdata[] = [
+        'name' => fullname($student),
+        'email' => $student->email,
+        'haspages' => $pagesread > 0,
+        'pages' => get_string('pages', 'ompdf', $pagesread),
+        'duration' => sprintf('%02dm %02ds', floor($totalsec / 60), $totalsec % 60),
+        'lastactive' => $sdata['last_modified'] ? userdate($sdata['last_modified']) : get_string('never', 'ompdf'),
+    ];
+}
+
+$templatedata = [
+    'title' => get_string('analytics_title', 'ompdf', format_string($ompdf->name)),
+    'exporturl' => (new moodle_url('/mod/ompdf/analytics.php', ['id' => $cm->id, 'export' => 'csv']))->out(false),
+    'exportlabel' => get_string('export_report', 'ompdf'),
+    'cards' => $cards,
+    'heatmap' => $heatmapdata,
+    'heatmaptitle' => get_string('page_reading_heatmap', 'ompdf'),
+    'studenttitle' => get_string('student_engagement', 'ompdf'),
+    'headers' => [
         get_string('csv_student_name', 'ompdf'),
         get_string('csv_email', 'ompdf'),
         get_string('csv_pages_read', 'ompdf'),
         get_string('total_time_spent', 'ompdf'),
         get_string('last_active', 'ompdf'),
-    ];
+    ],
+    'students' => $studentsdata,
+];
 
-    foreach ($students as $student) {
-        $sdata = isset($studentdata[$student->id])
-            ? $studentdata[$student->id]
-            : ['pages' => [], 'total_duration' => 0, 'last_modified' => 0];
-        $pagesread = count($sdata['pages']);
-        $totalsec = $sdata['total_duration'];
-        $formattedtime = sprintf('%02dm %02ds', floor($totalsec / 60), $totalsec % 60);
-        $lastactive = $sdata['last_modified'] ? userdate($sdata['last_modified']) : get_string('never', 'ompdf');
-
-        $table->data[] = [
-        fullname($student),
-        $student->email,
-        $pagesread > 0
-            ? '<span class="badge bg-success">' . get_string('pages', 'ompdf', $pagesread) . '</span>'
-            : '<span class="badge bg-secondary">' . get_string('pages', 'ompdf', 0) . '</span>',
-        $formattedtime,
-        $lastactive,
-        ];
-    }
-
-    echo html_writer::table($table);
-    echo html_writer::end_div();
-    echo html_writer::end_div();
-
-    echo $OUTPUT->footer();
+echo $OUTPUT->header();
+echo $OUTPUT->render_from_template('mod_ompdf/analytics_dashboard', $templatedata);
+echo $OUTPUT->footer();
