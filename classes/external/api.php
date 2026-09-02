@@ -112,6 +112,26 @@ class api extends external_api {
                     $conditions['page'] = $params['page'];
                 }
                 $records = $DB->get_records('ompdf_annotations', $conditions, 'timecreated ASC');
+                $userids = [];
+                foreach ($records as $record) {
+                    $userids[$record->userid] = (int)$record->userid;
+                }
+                $users = $userids ? $DB->get_records_list(
+                    'user',
+                    'id',
+                    array_values($userids),
+                    '',
+                    'id, firstname, lastname'
+                ) : [];
+                $records = array_filter($records, function ($record) use ($users, $USER) {
+                    if ($record->type !== 'teacher' && $record->userid != $USER->id) {
+                        return false;
+                    }
+                    $user = $users[$record->userid] ?? null;
+                    $record->author = $user ? fullname($user) : 'User';
+                    $record->is_owner = $record->userid == $USER->id;
+                    return true;
+                });
                 return json_encode(['status' => 'ok', 'annotations' => array_values($records)]);
 
             case 'delete_annotation':

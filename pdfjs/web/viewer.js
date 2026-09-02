@@ -674,6 +674,21 @@ const PDFViewerApplication = {
       const apiUrl = window.location.pathname.indexOf('/pdfjs/web/viewer.html') !== -1
         ? window.location.pathname.replace(/\/pdfjs\/web\/viewer\.html.*/, '/api.php')
         : '../../api.php';
+      const externalApi = function(args, legacyrequest) {
+        if (typeof window.require === 'function') {
+          return new Promise(function(resolve, reject) {
+            window.require(['core/ajax'], function(Ajax) {
+              Ajax.call([{
+                methodname: 'mod_ompdf_execute_action',
+                args: args
+              }])[0].then(function(response) {
+                resolve(JSON.parse(response));
+              }).catch(reject);
+            }, legacyrequest);
+          });
+        }
+        return legacyrequest();
+      };
 
       const sendDuration = function(pageToTrack) {
         if (!pageToTrack) return;
@@ -682,10 +697,19 @@ const PDFViewerApplication = {
         if (durationSec >= 1) {
           pageStartTime = now;
           const total = PDFViewerApplication.pagesCount || 1;
-          fetch(apiUrl + '?action=track_progress&cmid=' + cmid + '&page=' + pageToTrack + '&total=' + total + '&duration=' + durationSec, {
-            method: 'POST',
-            credentials: 'same-origin',
-            body: new URLSearchParams({ sesskey: params.get("sesskey") })
+          externalApi({
+            action: 'track_progress',
+            cmid: cmid,
+            page: pageToTrack,
+            total: total,
+            duration: durationSec
+          }, function() {
+            return fetch(apiUrl + '?action=track_progress&cmid=' + cmid + '&page=' + pageToTrack
+              + '&total=' + total + '&duration=' + durationSec, {
+                method: 'POST',
+                credentials: 'same-origin',
+                body: new URLSearchParams({sesskey: params.get("sesskey")})
+            });
           }).catch(function(err) {});
         }
       };
@@ -740,10 +764,11 @@ const PDFViewerApplication = {
         if (!page) page = PDFViewerApplication.page || 1;
         if (notesPageLabel) notesPageLabel.textContent = "PAGE " + page;
 
-        fetch(apiUrl + '?action=get_annotations&cmid=' + cmid + '&page=' + page, {
-          credentials: 'same-origin'
+        externalApi({action: 'get_annotations', cmid: cmid, page: page}, function() {
+          return fetch(apiUrl + '?action=get_annotations&cmid=' + cmid + '&page=' + page, {
+            credentials: 'same-origin'
+          }).then(res => res.json());
         })
-        .then(res => res.json())
         .then(data => {
           if (data.status === 'ok' && data.annotations) {
             if (notesCountHint) {
@@ -777,10 +802,12 @@ const PDFViewerApplication = {
                     del.textContent = '✖';
                     del.title = 'Delete Note';
                     del.onclick = function() {
-                      fetch(apiUrl + '?action=delete_annotation&cmid=' + cmid + '&id=' + ann.id, {
-                        method: 'POST',
-                        credentials: 'same-origin',
-                        body: new URLSearchParams({ sesskey: params.get("sesskey") })
+                      externalApi({action: 'delete_annotation', cmid: cmid, id: ann.id}, function() {
+                        return fetch(apiUrl + '?action=delete_annotation&cmid=' + cmid + '&id=' + ann.id, {
+                          method: 'POST',
+                          credentials: 'same-origin',
+                          body: new URLSearchParams({sesskey: params.get("sesskey")})
+                        }).then(res => res.json());
                       })
                       .then(() => loadAnnotations(page));
                     };
@@ -845,12 +872,20 @@ const PDFViewerApplication = {
           formData.append('color', color);
           formData.append('sesskey', params.get("sesskey"));
 
-          fetch(apiUrl, {
-            method: 'POST',
-            credentials: 'same-origin',
-            body: formData
+          externalApi({
+            action: 'save_annotation',
+            cmid: cmid,
+            page: page,
+            content: text,
+            type: type,
+            color: color
+          }, function() {
+            return fetch(apiUrl, {
+              method: 'POST',
+              credentials: 'same-origin',
+              body: formData
+            }).then(res => res.json());
           })
-          .then(res => res.json())
           .then(data => {
             saveNoteBtn.disabled = false;
             saveNoteBtn.textContent = 'Save Note';
