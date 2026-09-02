@@ -13,7 +13,7 @@
 ## ✨ Features
 
 ### 📄 PDF Viewer
-- Renders PDFs directly in the browser via **[PDF.js](https://github.com/mozilla/pdf.js)** (latest build)
+- Renders PDFs directly in the browser via **[PDF.js](https://github.com/mozilla/pdf.js) 3.11.174**
 - Works on desktop and mobile without any browser plugin
 - Open PDF in current tab or new tab — configurable per activity
 - Show folder contents inline on the course page or on a separate page
@@ -23,7 +23,7 @@
 ### 🔒 Enterprise DRM Protection
 - Per-activity toggle to **disable print, download, copy, and text selection**
 - Hides toolbar buttons and removes context menu when DRM is enabled
-- Prevents PDF source exposure via DevTools
+- Applies access checks and protected file delivery; browser-side DRM options are not a substitute for server-side security
 
 ### 📝 Smart Notes & Hints
 - Teachers can add **per-page hints** visible to all students
@@ -41,6 +41,12 @@
 - One-click toggle between light and dark theme
 - Preference persisted in `localStorage`
 
+### 🧩 Moodle integration
+- Supports Moodle activity backup and restore.
+- Implements the null Privacy API provider because OMPDF does not export personal data.
+- Uses Moodle templates, Output API, AMD modules, and a registered External Service for activity actions.
+- State-changing actions require authenticated access, the module capability, and a valid sesskey.
+
 ---
 
 ## 🖥️ Requirements
@@ -51,7 +57,7 @@
 | **PHP** | 7.4 or later |
 | **Browser** | Any modern browser (Chrome, Firefox, Safari, Edge) |
 
-> ⚠️ **Not supported:** Internet Explorer, Moodle 3.x and below.
+> ⚠️ **Not supported:** Internet Explorer and Moodle 3.x or below. The bundled PDF.js distribution is declared in [`thirdpartylibs.xml`](thirdpartylibs.xml).
 
 ---
 
@@ -93,6 +99,24 @@ Configure default settings at:
 | `mdl_ompdf_analytics` | Per-user, per-page reading time tracking |
 | `mdl_ompdf_annotations` | Smart Notes & Hints storage |
 
+## 🔌 External API
+
+Interactive viewer actions are exposed through the registered Moodle External Service
+`mod_ompdf_execute_action` and called by the AMD/API integration. The legacy
+`api.php` endpoint remains as a compatibility fallback for the bundled PDF.js viewer.
+All write actions validate the logged-in user, course-module context, capability,
+and sesskey.
+
+## 🧪 Development and quality checks
+
+The repository includes GitHub Actions configuration in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+for Moodle plugin checks. Before submitting changes, run the available checks with
+`moodle-plugin-ci` and rebuild AMD files with Moodle Grunt tasks.
+
+The bundled PDF.js update and licensing instructions are documented in
+[`pdfjs/readme_moodle.txt`](pdfjs/readme_moodle.txt). Do not update the distribution
+without updating [`thirdpartylibs.xml`](thirdpartylibs.xml) and verifying the build.
+
 ---
 
 ## 🐳 Docker (Local Development)
@@ -118,7 +142,11 @@ See [README_DOCKER.md](README_DOCKER.md) for full setup instructions.
 - ✨ Student Engagement Analytics dashboard
 - ✨ Enterprise DRM read-only protection
 - ✨ Dark / Night Mode toggle
-- ⬆️ PDF.js upgraded to latest build
+- ⬆️ PDF.js 3.11.174 declared as a bundled third-party library
+- ✅ Added activity backup/restore and Privacy API support
+- ✅ Added registered External Service, CSRF protection, and capability checks
+- ✅ Migrated activity rendering to Mustache templates and AMD modules
+- ✅ Added Moodle CI workflow and plugin quality checks
 - 🐛 Fix CSS syntax error on toolbar icon mask-image
 - 🐛 Fix `db/install.xml` missing `</INDEXES>` tag (moodle-plugin-ci validate)
 
