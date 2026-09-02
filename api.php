@@ -153,12 +153,12 @@ switch ($action) {
             echo json_encode(['status' => 'ok']);
         } else {
             http_response_code(403);
-            echo json_encode(['error' => 'Permission denied']);
+            echo json_encode(['error' => get_string('permission_denied', 'ompdf')]);
         }
         break;
 
     default:
         http_response_code(400);
-        echo json_encode(['error' => 'Unknown action']);
+        echo json_encode(['error' => get_string('unknown_action', 'ompdf')]);
         break;
 }

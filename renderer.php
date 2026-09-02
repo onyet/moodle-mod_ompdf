@@ -62,7 +62,7 @@ class mod_ompdf_renderer extends plugin_renderer_base {
             $output .= html_writer::div(
                 html_writer::link(
                     $analyticsurl,
-                    '📊 View Reading Analytics & Heatmap',
+                    get_string('analyticslink', 'ompdf'),
                     ['class' => 'btn btn-outline-primary btn-sm mb-3']
                 ),
                 'text-right float-right mb-3'

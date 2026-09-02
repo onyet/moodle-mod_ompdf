@@ -99,7 +99,14 @@ if ($export === 'csv') {
     header('Content-Disposition: attachment; filename="' . $filename . '"');
 
     $output = fopen('php://output', 'w');
-    fputcsv($output, ['Student Name', 'Email', 'Pages Read', 'Total Time (Seconds)', 'Total Time (Formatted)', 'Last Active Date']);
+    fputcsv($output, [
+        get_string('csv_student_name', 'ompdf'),
+        get_string('csv_email', 'ompdf'),
+        get_string('csv_pages_read', 'ompdf'),
+        get_string('csv_total_time_seconds', 'ompdf'),
+        get_string('csv_total_time_formatted', 'ompdf'),
+        get_string('csv_last_active_date', 'ompdf'),
+    ]);
 
     foreach ($students as $student) {
         $data = isset($studentdata[$student->id])
@@ -108,7 +115,7 @@ if ($export === 'csv') {
         $pagesread = count($data['pages']);
         $totalsec = $data['total_duration'];
         $formattedtime = sprintf('%02dh %02dm %02ds', floor($totalsec / 3600), floor(($totalsec % 3600) / 60), $totalsec % 60);
-        $lastactive = $data['last_modified'] ? userdate($data['last_modified']) : 'Never';
+        $lastactive = $data['last_modified'] ? userdate($data['last_modified']) : get_string('never', 'ompdf');
 
         fputcsv($output, [
             fullname($student),
@@ -125,7 +132,7 @@ if ($export === 'csv') {
 
 // Render HTML dashboard page.
 $PAGE->set_url('/mod/ompdf/analytics.php', ['id' => $cm->id]);
-$PAGE->set_title(format_string($ompdf->name) . ': Analytics Dashboard');
+$PAGE->set_title(get_string('analytics_title', 'ompdf', format_string($ompdf->name)));
 $PAGE->set_heading($course->fullname);
 $PAGE->set_pagelayout('incourse');
 
@@ -133,10 +140,10 @@ echo $OUTPUT->header();
 
 // Page header and controls.
 echo html_writer::start_div('d-flex justify-content-between align-items-center mb-4');
-echo html_writer::tag('h2', '📊 Reading Analytics & Heatmap: ' . format_string($ompdf->name));
+echo html_writer::tag('h2', get_string('analytics_title', 'ompdf', format_string($ompdf->name)));
 echo html_writer::link(
     new moodle_url('/mod/ompdf/analytics.php', ['id' => $cm->id, 'export' => 'csv']),
-    '📥 Export Report (CSV)',
+    get_string('export_report', 'ompdf'),
     ['class' => 'btn btn-primary']
 );
 echo html_writer::end_div();
@@ -152,12 +159,12 @@ $avgformatted = sprintf('%02dm %02ds', floor($avgduration / 60), $avgduration % 
 
 echo html_writer::start_div('row mb-4');
     echo html_writer::div(
-        html_writer::div(html_writer::tag('h5', 'Total Active Readers', ['class' => 'card-title'])
+        html_writer::div(html_writer::tag('h5', get_string('total_active_readers', 'ompdf'), ['class' => 'card-title'])
         . html_writer::tag('p', $totalreaders, ['class' => 'card-text display-4']), 'card-body'),
         'card text-white bg-info mb-3'
     );
     echo html_writer::div(
-        html_writer::div(html_writer::tag('h5', 'Total Cumulative Time', ['class' => 'card-title'])
+        html_writer::div(html_writer::tag('h5', get_string('total_cumulative_time', 'ompdf'), ['class' => 'card-title'])
         . html_writer::tag(
             'p',
             sprintf('%02dh %02dm', floor($totalseconds / 3600), floor(($totalseconds % 3600) / 60)),
@@ -166,7 +173,7 @@ echo html_writer::start_div('row mb-4');
         'card text-white bg-success mb-3'
     );
     echo html_writer::div(
-        html_writer::div(html_writer::tag('h5', 'Avg Time per Student', ['class' => 'card-title'])
+        html_writer::div(html_writer::tag('h5', get_string('average_time_per_student', 'ompdf'), ['class' => 'card-title'])
         . html_writer::tag('p', $avgformatted, ['class' => 'card-text display-4']), 'card-body'),
         'card text-white bg-dark mb-3'
     );
@@ -174,11 +181,11 @@ echo html_writer::start_div('row mb-4');
 
     // Reading heatmap section.
     echo html_writer::start_div('card mb-4');
-    echo html_writer::div('🔥 Page Reading Heatmap (Time Spent per Page)', 'card-header font-weight-bold');
+    echo html_writer::div(get_string('page_reading_heatmap', 'ompdf'), 'card-header font-weight-bold');
     echo html_writer::start_div('card-body');
 
     if (empty($pageheatmap)) {
-        echo html_writer::div('No reading engagement analytics recorded yet.', 'alert alert-secondary');
+        echo html_writer::div(get_string('no_reading_analytics', 'ompdf'), 'alert alert-secondary');
     } else {
         $maxduration = 1;
         foreach ($pageheatmap as $ph) {
@@ -202,13 +209,13 @@ echo html_writer::start_div('row mb-4');
             }
 
             echo '<div style="display: flex; align-items: center; gap: 15px;">';
-            echo '<div style="width: 70px; font-weight: bold;">Page ' . $page . '</div>';
+            echo '<div style="width: 70px; font-weight: bold;">' . get_string('page', 'ompdf', $page) . '</div>';
             echo '<div style="flex-grow: 1; background: #e2e8f0; height: 24px; border-radius: 4px; overflow: hidden;">';
             echo '<div style="width: ' . max($pct, 4) . '%; background: ' . $color
                 . '; height: 100%; transition: width 0.5s;"></div>';
             echo '</div>';
             echo '<div style="width: 180px; text-align: right; font-size: 0.9rem; '
-                . 'color: #475569;">' . $durformatted . ' (' . $readercount . ' readers)</div>';
+                . 'color: #475569;">' . $durformatted . ' (' . get_string('readers', 'ompdf', $readercount) . ')</div>';
             echo '</div>';
         }
         echo '</div>';
@@ -218,12 +225,18 @@ echo html_writer::start_div('row mb-4');
 
     // Student engagement table.
     echo html_writer::start_div('card');
-    echo html_writer::div('👥 Student Engagement Breakdown', 'card-header font-weight-bold');
+    echo html_writer::div(get_string('student_engagement', 'ompdf'), 'card-header font-weight-bold');
     echo html_writer::start_div('card-body');
 
     $table = new html_table();
     $table->attributes['class'] = 'generaltable mod_index';
-    $table->head = ['Student Name', 'Email', 'Pages Read', 'Total Time Spent', 'Last Active'];
+    $table->head = [
+        get_string('csv_student_name', 'ompdf'),
+        get_string('csv_email', 'ompdf'),
+        get_string('csv_pages_read', 'ompdf'),
+        get_string('total_time_spent', 'ompdf'),
+        get_string('last_active', 'ompdf'),
+    ];
 
     foreach ($students as $student) {
         $sdata = isset($studentdata[$student->id])
@@ -232,14 +245,14 @@ echo html_writer::start_div('row mb-4');
         $pagesread = count($sdata['pages']);
         $totalsec = $sdata['total_duration'];
         $formattedtime = sprintf('%02dm %02ds', floor($totalsec / 60), $totalsec % 60);
-        $lastactive = $sdata['last_modified'] ? userdate($sdata['last_modified']) : 'Never';
+        $lastactive = $sdata['last_modified'] ? userdate($sdata['last_modified']) : get_string('never', 'ompdf');
 
         $table->data[] = [
         fullname($student),
         $student->email,
         $pagesread > 0
-            ? '<span class="badge bg-success">' . $pagesread . ' pages</span>'
-            : '<span class="badge bg-secondary">0 pages</span>',
+            ? '<span class="badge bg-success">' . get_string('pages', 'ompdf', $pagesread) . '</span>'
+            : '<span class="badge bg-secondary">' . get_string('pages', 'ompdf', 0) . '</span>',
         $formattedtime,
         $lastactive,
         ];
