@@ -29,8 +29,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 // Display folder contents on a separate page.
 define('OMPDF_MANAGER_DISPLAY_PAGE', 0);
 // Display folder contents inline in a course.
@@ -76,8 +74,10 @@ function ompdf_supports($feature) {
  * @param mod_ompdf_mod_form $form
  * @return int The instance id of the new ompdf instance
  */
-function ompdf_add_instance(stdClass $data,
-                                  ?mod_ompdf_mod_form $form = null) {
+function ompdf_add_instance(
+    stdClass $data,
+    ?mod_ompdf_mod_form $form = null
+) {
     require_once(dirname(__FILE__) . '/locallib.php');
 
     $context = context_module::instance($data->coursemodule);
@@ -97,8 +97,10 @@ function ompdf_add_instance(stdClass $data,
  * @param mod_ompdf_mod_form $form
  * @return boolean
  */
-function ompdf_update_instance(stdClass $data,
-                                     ?mod_ompdf_mod_form $form = null) {
+function ompdf_update_instance(
+    stdClass $data,
+    ?mod_ompdf_mod_form $form = null
+) {
     require_once(dirname(__FILE__) . '/locallib.php');
 
     $context = context_module::instance($data->coursemodule);
@@ -120,11 +122,13 @@ function ompdf_update_instance(stdClass $data,
 function ompdf_delete_instance($id) {
     require_once(dirname(__FILE__) . '/locallib.php');
 
-    $cm = get_coursemodule_from_instance('ompdf',
-                                         $id,
-                                         0,
-                                         false,
-                                         MUST_EXIST);
+    $cm = get_coursemodule_from_instance(
+        'ompdf',
+        $id,
+        0,
+        false,
+        MUST_EXIST
+    );
     $context = context_module::instance($cm->id);
     $ompdf = new ompdf($context, null, null);
     return $ompdf->delete_instance();
@@ -147,11 +151,12 @@ function ompdf_user_outline($course, $user, $mod, $ompdf) {
 
     $logs = $DB->get_records(
         'log',
-        array('userid' => $user->id,
+        ['userid' => $user->id,
               'module' => 'ompdf',
               'action' => 'view',
-              'info' => $ompdf->id),
-        'time ASC');
+              'info' => $ompdf->id],
+        'time ASC'
+    );
     if ($logs) {
         $numviews = count($logs);
         $lastlog = array_pop($logs);
@@ -180,11 +185,12 @@ function ompdf_user_complete($course, $user, $mod, $ompdf) {
 
     $logs = $DB->get_records(
         'log',
-        array('userid' => $user->id,
+        ['userid' => $user->id,
               'module' => 'ompdf',
               'action' => 'view',
-              'info' => $ompdf->id),
-        'time ASC');
+              'info' => $ompdf->id],
+        'time ASC'
+    );
 
     if ($logs) {
         $numviews = count($logs);
@@ -193,7 +199,7 @@ function ompdf_user_complete($course, $user, $mod, $ompdf) {
         $strmostrecently = get_string('mostrecently');
         $strnumviews = get_string('numviews', '', $numviews);
 
-        echo "$strnumviews - $strmostrecently ".userdate($lastlog->time);
+        echo "$strnumviews - $strmostrecently " . userdate($lastlog->time);
     } else {
         print_string('neverseen', 'ompdf');
     }
@@ -205,7 +211,7 @@ function ompdf_user_complete($course, $user, $mod, $ompdf) {
  * @return array Array of capability strings
  */
 function ompdf_get_extra_capabilities() {
-    return array('moodle/site:accessallgroups');
+    return ['moodle/site:accessallgroups'];
 }
 
 /**
@@ -241,10 +247,12 @@ function ompdf_get_coursemodule_info($cm) {
     if ($cm->showdescription) {
         // Convert intro to html.
         // Do not filter cached version, filters run at display time.
-        $result->content = format_module_intro('ompdf',
-                                               $instance,
-                                               $cm->id,
-                                               false);
+        $result->content = format_module_intro(
+            'ompdf',
+            $instance,
+            $cm->id,
+            false
+        );
     }
 
     return $result;
@@ -256,7 +264,7 @@ function ompdf_get_coursemodule_info($cm) {
  * @return array
  */
 function ompdf_get_view_actions() {
-    return array('view', 'view help');
+    return ['view', 'view help'];
 }
 
 /**
@@ -265,7 +273,7 @@ function ompdf_get_view_actions() {
  * @return array
  */
 function ompdf_get_post_actions() {
-    return array('update', 'add');
+    return ['update', 'add'];
 }
 
 /**
@@ -280,9 +288,9 @@ function ompdf_get_post_actions() {
  * @return array Array of [(string)filearea] => (string)description]
  */
 function ompdf_get_file_areas($course, $cm, $context) {
-    return array(
+    return [
         'pdfs' => get_string('filearea_pdfs', 'ompdf'),
-    );
+    ];
 }
 
 /**
@@ -299,15 +307,17 @@ function ompdf_get_file_areas($course, $cm, $context) {
  * @param string $filename File name
  * @return file_info Instance or null if not found
  */
-function ompdf_get_file_info($browser,
-                                   $areas,
-                                   $course,
-                                   $cm,
-                                   $context,
-                                   $filearea,
-                                   $itemid,
-                                   $filepath,
-                                   $filename) {
+function ompdf_get_file_info(
+    $browser,
+    $areas,
+    $course,
+    $cm,
+    $context,
+    $filearea,
+    $itemid,
+    $filepath,
+    $filename
+) {
     global $CFG;
 
     if ($context->contextlevel != CONTEXT_MODULE) {
@@ -329,27 +339,33 @@ function ompdf_get_file_info($browser,
         $filepath = is_null($filepath) ? '/' : $filepath;
         $filename = is_null($filename) ? '.' : $filename;
 
-        if (!$storedfile = $fs->get_file($context->id,
-                                         'mod_ompdf',
-                                         $filearea,
-                                         0,
-                                         $filepath,
-                                         $filename)) {
+        if (
+            !$storedfile = $fs->get_file(
+                $context->id,
+                'mod_ompdf',
+                $filearea,
+                0,
+                $filepath,
+                $filename
+            )
+        ) {
             // Not found.
             return null;
         }
 
         $urlbase = $CFG->wwwroot . '/pluginfile.php';
 
-        return new file_info_stored($browser,
-                                    $context,
-                                    $storedfile,
-                                    $urlbase,
-                                    $areas[$filearea],
-                                    false,
-                                    true,
-                                    true,
-                                    false);
+        return new file_info_stored(
+            $browser,
+            $context,
+            $storedfile,
+            $urlbase,
+            $areas[$filearea],
+            false,
+            true,
+            true,
+            false
+        );
     }
 
     // Not found.
@@ -369,13 +385,15 @@ function ompdf_get_file_info($browser,
  * @return bool False if file not found, does not return if found -
  *              just sends the file
  */
-function ompdf_pluginfile($course,
-                                $cm,
-                                $context,
-                                $filearea,
-                                array $args,
-                                $forcedownload,
-                                array $options=array()) {
+function ompdf_pluginfile(
+    $course,
+    $cm,
+    $context,
+    $filearea,
+    array $args,
+    $forcedownload,
+    array $options = []
+) {
     global $CFG, $DB, $USER;
 
     require_once(dirname(__FILE__) . '/locallib.php');
@@ -416,7 +434,7 @@ function ompdf_pluginfile($course,
  * @return array Status array
  */
 function ompdf_reset_userdata($data) {
-    return array();
+    return [];
 }
 
 /**
@@ -445,9 +463,11 @@ function ompdf_cm_info_dynamic(cm_info $cm) {
 function ompdf_cm_info_view(cm_info $cm) {
     global $PAGE, $DB;
 
-    if ($cm->uservisible &&
+    if (
+        $cm->uservisible &&
             $cm->customdata &&
-            has_capability('mod/ompdf:view', $cm->context)) {
+            has_capability('mod/ompdf:view', $cm->context)
+    ) {
         require_once(dirname(__FILE__) . '/locallib.php');
 
         $context = context_module::instance($cm->id);

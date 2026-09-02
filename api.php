@@ -29,7 +29,7 @@ $action = required_param('action', PARAM_ALPHAEXT);
 $cmid   = required_param('cmid', PARAM_INT);
 
 $cm     = get_coursemodule_from_id('ompdf', $cmid, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+$course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
 $context = context_module::instance($cm->id);
 
 require_login($course, false, $cm);
@@ -54,14 +54,14 @@ switch ($action) {
 
         set_user_preference('mod_ompdf_lastpage_' . $cm->id, $currentpage);
 
-        // Record time-spent reading duration per page in ompdf_analytics
+        // Record time-spent reading duration per page in ompdf_analytics.
         if ($duration > 0 && $duration <= 3600 && $DB->get_manager()->table_exists('ompdf_analytics')) {
             $now = time();
-            $record = $DB->get_record('ompdf_analytics', array(
+            $record = $DB->get_record('ompdf_analytics', [
                 'ompdfid' => $cm->instance,
                 'userid'  => $USER->id,
                 'page'    => $currentpage,
-            ));
+            ]);
 
             if ($record) {
                 $record->duration += $duration;
@@ -79,7 +79,7 @@ switch ($action) {
             }
         }
 
-        // Auto activity completion trigger
+        // Trigger automatic activity completion.
         $completion = new \completion_info($course);
         $iscompleted = false;
         if ($completion->is_enabled($cm)) {
@@ -98,8 +98,8 @@ switch ($action) {
         $color   = optional_param('color', 'yellow', PARAM_ALPHA);
         $type    = optional_param('type', 'student', PARAM_ALPHA);
 
-        $is_teacher = has_capability('moodle/course:manageactivities', $context);
-        if ($type === 'teacher' && !$is_teacher) {
+        $isteacher = has_capability('moodle/course:manageactivities', $context);
+        if ($type === 'teacher' && !$isteacher) {
             $type = 'student';
         }
 
@@ -122,20 +122,20 @@ switch ($action) {
 
     case 'get_annotations':
         $page = optional_param('page', 0, PARAM_INT);
-        $params = array('ompdfid' => $cm->instance);
+        $params = ['ompdfid' => $cm->instance];
         if ($page > 0) {
             $params['page'] = $page;
         }
 
-        $allrecords = array();
+        $allrecords = [];
         if ($DB->get_manager()->table_exists('ompdf_annotations')) {
             $allrecords = $DB->get_records('ompdf_annotations', $params, 'timecreated ASC');
         }
 
-        $result = array();
+        $result = [];
         foreach ($allrecords as $rec) {
             if ($rec->type === 'teacher' || $rec->userid == $USER->id) {
-                $userrec = $DB->get_record('user', array('id' => $rec->userid), 'id, firstname, lastname', IGNORE_MISSING);
+                $userrec = $DB->get_record('user', ['id' => $rec->userid], 'id, firstname, lastname', IGNORE_MISSING);
                 $rec->author = $userrec ? fullname($userrec) : 'User';
                 $rec->is_owner = ($rec->userid == $USER->id);
                 $result[] = $rec;
@@ -146,10 +146,10 @@ switch ($action) {
 
     case 'delete_annotation':
         $annid = required_param('id', PARAM_INT);
-        $ann = $DB->get_record('ompdf_annotations', array('id' => $annid, 'ompdfid' => $cm->instance), '*', MUST_EXIST);
-        $is_teacher = has_capability('moodle/course:manageactivities', $context);
-        if ($ann->userid == $USER->id || $is_teacher) {
-            $DB->delete_records('ompdf_annotations', array('id' => $annid));
+        $ann = $DB->get_record('ompdf_annotations', ['id' => $annid, 'ompdfid' => $cm->instance], '*', MUST_EXIST);
+        $isteacher = has_capability('moodle/course:manageactivities', $context);
+        if ($ann->userid == $USER->id || $isteacher) {
+            $DB->delete_records('ompdf_annotations', ['id' => $annid]);
             echo json_encode(['status' => 'ok']);
         } else {
             http_response_code(403);

@@ -22,8 +22,6 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Standard base class for mod_ompdf.
  */
@@ -110,17 +108,21 @@ class ompdf {
         $add->readonly_protection = !empty($formdata->readonly_protection) ? 1 : 0;
 
         $returnid = $DB->insert_record('ompdf', $add);
-        $this->instance = $DB->get_record('ompdf',
-                                          array('id' => $returnid),
-                                          '*',
-                                          MUST_EXIST);
+        $this->instance = $DB->get_record(
+            'ompdf',
+            ['id' => $returnid],
+            '*',
+            MUST_EXIST
+        );
         $this->save_files($formdata);
 
         // Cache the course record.
-        $this->course = $DB->get_record('course',
-                                        array('id' => $formdata->course),
-                                        '*',
-                                        MUST_EXIST);
+        $this->course = $DB->get_record(
+            'course',
+            ['id' => $formdata->course],
+            '*',
+            MUST_EXIST
+        );
 
         return $returnid;
     }
@@ -136,13 +138,13 @@ class ompdf {
 
         // Delete files associated with this ompdf.
         $fs = get_file_storage();
-        if (! $fs->delete_area_files($this->context->id) ) {
+        if (! $fs->delete_area_files($this->context->id)) {
             $result = false;
         }
 
         // Delete the instance.
         // Note: all context files are deleted automatically.
-        $DB->delete_records('ompdf', array('id' => $this->get_instance()->id));
+        $DB->delete_records('ompdf', ['id' => $this->get_instance()->id]);
 
         return $result;
     }
@@ -169,10 +171,12 @@ class ompdf {
         $update->readonly_protection = !empty($formdata->readonly_protection) ? 1 : 0;
 
         $result = $DB->update_record('ompdf', $update);
-        $this->instance = $DB->get_record('ompdf',
-                                          array('id' => $update->id),
-                                          '*',
-                                          MUST_EXIST);
+        $this->instance = $DB->get_record(
+            'ompdf',
+            ['id' => $update->id],
+            '*',
+            MUST_EXIST
+        );
         $this->save_files($formdata);
 
         return $result;
@@ -224,11 +228,13 @@ class ompdf {
             return $this->instance;
         }
         if ($this->get_course_module()) {
-            $params = array('id' => $this->get_course_module()->instance);
-            $this->instance = $DB->get_record('ompdf',
-                                              $params,
-                                              '*',
-                                              MUST_EXIST);
+            $params = ['id' => $this->get_course_module()->instance];
+            $this->instance = $DB->get_record(
+                'ompdf',
+                $params,
+                '*',
+                MUST_EXIST
+            );
         }
         if (!$this->instance) {
             throw new coding_exception('Improper use of the ompdf class. ' .
@@ -273,7 +279,8 @@ class ompdf {
                 $this->context->instanceid,
                 0,
                 false,
-                MUST_EXIST);
+                MUST_EXIST
+            );
             return $this->coursemodule;
         }
         return null;
@@ -315,7 +322,7 @@ class ompdf {
         if (!$this->context) {
             return null;
         }
-        $params = array('id' => $this->get_course_context()->instanceid);
+        $params = ['id' => $this->get_course_context()->instanceid];
         $this->course = $DB->get_record('course', $params, '*', MUST_EXIST);
 
         return $this->course;
@@ -330,18 +337,18 @@ class ompdf {
      * @param string $url The url to the ompdf module instance.
      * @return void
      */
-    public function add_to_log($action = '', $info = '', $url='') {
+    public function add_to_log($action = '', $info = '', $url = '') {
         global $USER;
 
         $fullurl = 'view.php?id=' . $this->get_course_module()->id;
         if ($url != '') {
             $fullurl .= '&' . $url;
         }
-                   
-        $event = \mod_ompdf\event\view_all::create(array(
+
+        $event = \mod_ompdf\event\view_all::create([
             'objectid' => $this->get_course_module()->id,
-            'context' => context_module::instance($USER->id)
-        ));
+            'context' => context_module::instance($USER->id),
+        ]);
         $event->trigger();
     }
 
@@ -370,9 +377,9 @@ class ompdf {
         global $DB;
 
         // Storage of files from the filemanager (pdfs).
-        $options = array('subdirs' => true,
+        $options = ['subdirs' => true,
                          'maxbytes' => 0,
-                         'maxfiles' => -1);
+                         'maxfiles' => -1];
         $draftitemid = $formdata->pdfs;
         if ($draftitemid) {
             file_save_draft_area_files(

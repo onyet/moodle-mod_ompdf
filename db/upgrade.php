@@ -29,8 +29,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Execute ompdf upgrade from the given old version.
  *
@@ -53,34 +51,34 @@ function xmldb_ompdf_upgrade($oldversion) {
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
         $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
 
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-        $table->add_index('ompdfid_user_page', XMLDB_INDEX_NOTUNIQUE, array('ompdfid', 'userid', 'page'));
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('ompdfid_user_page', XMLDB_INDEX_NOTUNIQUE, ['ompdfid', 'userid', 'page']);
 
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
 
-        $ompdf_table = new xmldb_table('ompdf');
+        $ompdftable = new xmldb_table('ompdf');
         $field = new xmldb_field('readonly_protection', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'openinnewtab');
-        if (!$dbman->field_exists($ompdf_table, $field)) {
-            $dbman->add_field($ompdf_table, $field);
+        if (!$dbman->field_exists($ompdftable, $field)) {
+            $dbman->add_field($ompdftable, $field);
         }
 
-        $ann_table = new xmldb_table('ompdf_annotations');
-        $ann_table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $ann_table->add_field('ompdfid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $ann_table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $ann_table->add_field('page', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '1');
-        $ann_table->add_field('content', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
-        $ann_table->add_field('color', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'yellow');
-        $ann_table->add_field('type', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'student');
-        $ann_table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
-        $ann_table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
-        $ann_table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-        $ann_table->add_index('ompdfid_page', XMLDB_INDEX_NOTUNIQUE, array('ompdfid', 'page'));
+        $anntable = new xmldb_table('ompdf_annotations');
+        $anntable->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $anntable->add_field('ompdfid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $anntable->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $anntable->add_field('page', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '1');
+        $anntable->add_field('content', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $anntable->add_field('color', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'yellow');
+        $anntable->add_field('type', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'student');
+        $anntable->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $anntable->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $anntable->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $anntable->add_index('ompdfid_page', XMLDB_INDEX_NOTUNIQUE, ['ompdfid', 'page']);
 
-        if (!$dbman->table_exists($ann_table)) {
-            $dbman->create_table($ann_table);
+        if (!$dbman->table_exists($anntable)) {
+            $dbman->create_table($anntable);
         }
 
         upgrade_mod_savepoint(true, 2026072800, 'ompdf');

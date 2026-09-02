@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
- 
+
 /**
  * The Vew All event.
  *
@@ -22,45 +22,77 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 namespace mod_ompdf\event;
-defined('MOODLE_INTERNAL') || die();
+
 /**
+ * Event triggered when OMPDF activities are viewed.
+ *
  * @since     Moodle 3.10+
  * @copyright 2021  Dian Mukti Wibowo
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- **/
+ */
 class view_all extends \core\event\base {
+    /**
+     * Initialises the event data.
+     */
     protected function init() {
-        $this->data['crud'] = 'r'; // c(reate), r(ead), u(pdate), d(elete)
+        $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
         $this->data['objecttable'] = 'ompdf';
     }
- 
+
+    /**
+     * Returns the event name.
+     *
+     * @return string
+     */
     public static function get_name() {
         return get_string('eventviewall', 'mod_ompdf');
     }
- 
+
+    /**
+     * Returns the event description.
+     *
+     * @return string
+     */
     public function get_description() {
         return "The user with id '{$this->userid}' has viewed all ompdf activities in course with id '{$this->courseid}'.";
     }
- 
+
+    /**
+     * Returns the event URL.
+     *
+     * @return \moodle_url
+     */
     public function get_url() {
-        return new \moodle_url('/mod/ompdf/index.php', array('id' => $this->courseid));
+        return new \moodle_url('/mod/ompdf/index.php', ['id' => $this->courseid]);
     }
- 
+
+    /**
+     * Returns legacy log data.
+     *
+     * @return array
+     */
     public function get_legacy_logdata() {
-        // Override if you are migrating an add_to_log() call.
-        return array($this->courseid, 'ompdf', 'view',
+        return [$this->courseid, 'ompdf', 'view',
             'Has view pdf',
-            $this->objectid, $this->contextinstanceid);
+            $this->objectid, $this->contextinstanceid];
     }
- 
+
+    /**
+     * Returns the legacy event name.
+     *
+     * @return string
+     */
     public static function get_legacy_eventname() {
-        // Override ONLY if you are migrating events_trigger() call.
         return 'view_all';
     }
- 
+
+    /**
+     * Returns legacy event data.
+     *
+     * @return stdClass
+     */
     protected function get_legacy_eventdata() {
-        // Override if you migrating events_trigger() call.
         $data = new \stdClass();
         $data->id = $this->objectid;
         $data->userid = $this->relateduserid;

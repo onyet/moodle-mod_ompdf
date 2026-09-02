@@ -44,7 +44,7 @@ jobs:
 
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: plugin
           persist-credentials: false
@@ -101,7 +101,7 @@ jobs:
 
       - name: Grunt
         if: ${{ !cancelled() }}
-        run: moodle-plugin-ci grunt --max-lint-warnings 0
+        run: moodle-plugin-ci grunt --tasks=amd --max-lint-warnings 0
 
       - name: PHPUnit tests
         if: ${{ !cancelled() }}

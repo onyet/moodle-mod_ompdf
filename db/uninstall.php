@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Uninstalls the OMPDF module.
+ *
  * @see uninstall_plugin()
  *
  * @package    mod_ompdf

@@ -24,8 +24,9 @@
 
 namespace mod_ompdf;
 
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Provides authenticated encryption helpers for PDF URLs.
+ */
 class security {
     /**
      * Get secret key derived from Moodle site identifier.
@@ -51,14 +52,14 @@ class security {
             'url'  => $data,
             'cmid' => (int)($cmid ?? 0),
             'exp'  => time() + $ttl,
-            'salt' => bin2hex(openssl_random_pseudo_bytes(8))
+            'salt' => bin2hex(openssl_random_pseudo_bytes(8)),
         ]);
 
         $ciphertext = openssl_encrypt($payload, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
         $hmac = hash_hmac('sha256', $iv . $ciphertext, $key, true);
 
         $b64 = base64_encode($iv . $hmac . $ciphertext);
-        return str_replace(array('+', '/', '='), array('-', '_', ''), $b64);
+        return str_replace(['+', '/', '='], ['-', '_', ''], $b64);
     }
 
     /**
@@ -68,13 +69,13 @@ class security {
      * @return array|null Array with 'url' and 'cmid' or null if invalid/expired
      */
     public static function decrypt_payload(string $token): ?array {
-        $token = str_replace(array('-', '_', ' '), array('+', '/', '+'), rawurldecode($token));
+        $token = str_replace(['-', '_', ' '], ['+', '/', '+'], rawurldecode($token));
         $mod4 = strlen($token) % 4;
         if ($mod4) {
             $token .= substr('====', $mod4);
         }
         $raw = base64_decode($token);
-        if (!$raw || strlen($raw) < 49) { // 16 IV + 32 HMAC + min ciphertext
+        if (!$raw || strlen($raw) < 49) {
             return null;
         }
 
@@ -83,8 +84,8 @@ class security {
         $hmac = substr($raw, 16, 32);
         $ciphertext = substr($raw, 48);
 
-        $calculated_hmac = hash_hmac('sha256', $iv . $ciphertext, $key, true);
-        if (!hash_equals($hmac, $calculated_hmac)) {
+        $calculatedhmac = hash_hmac('sha256', $iv . $ciphertext, $key, true);
+        if (!hash_equals($hmac, $calculatedhmac)) {
             return null;
         }
 
@@ -99,7 +100,7 @@ class security {
         }
 
         if (time() > (int)$data['exp']) {
-            return null; // Token expired
+            return null; // Token expired.
         }
 
         return $data;

@@ -57,18 +57,24 @@ class mod_ompdf_renderer extends plugin_renderer_base {
 
         $coursecontext = context_course::instance($cm->course);
         if (has_capability('moodle/course:manageactivities', $context) || has_capability('mod/ompdf:addinstance', $coursecontext)) {
-            $analyticsurl = new moodle_url('/mod/ompdf/analytics.php', array('id' => $cm->id));
+            $analyticsurl = new moodle_url('/mod/ompdf/analytics.php', ['id' => $cm->id]);
             $output .= html_writer::div(
-                html_writer::link($analyticsurl, '📊 View Reading Analytics & Heatmap', array('class' => 'btn btn-outline-primary btn-sm mb-3')),
+                html_writer::link(
+                    $analyticsurl,
+                    '📊 View Reading Analytics & Heatmap',
+                    ['class' => 'btn btn-outline-primary btn-sm mb-3']
+                ),
                 'text-right float-right mb-3'
             );
         }
 
         if (!empty($ompdf->get_instance()->intro)) {
             $output .= $this->output->box_start('generalbox boxaligncenter', 'intro');
-            $output .= format_module_intro('ompdf',
-                                           $ompdf->get_instance(),
-                                           $cm->id);
+            $output .= format_module_intro(
+                'ompdf',
+                $ompdf->get_instance(),
+                $cm->id
+            );
             $output .= $this->output->box_end();
         }
 
@@ -102,20 +108,26 @@ class mod_ompdf_renderer extends plugin_renderer_base {
         $modinfo = get_fast_modinfo($course);
         $cm = $modinfo->get_cm($coursemodule->id);
 
-        if (!$cm->uservisible ||
-                !has_capability('mod/ompdf:view', $context)) {
+        if (
+            !$cm->uservisible ||
+                !has_capability('mod/ompdf:view', $context)
+        ) {
             // Module is not visible to the user. Don't throw any
             // errors in renderer, just return empty string.
             return $output;
         }
 
-        if ($instance->display == OMPDF_MANAGER_DISPLAY_INLINE &&
+        if (
+            $instance->display == OMPDF_MANAGER_DISPLAY_INLINE &&
                 $cm->showdescription &&
-                !empty($instance->intro)) {
-            $output .= format_module_intro('ompdf',
-                                           $instance,
-                                           $cm->id,
-                                           false);
+                !empty($instance->intro)
+        ) {
+            $output .= format_module_intro(
+                'ompdf',
+                $instance,
+                $cm->id,
+                false
+            );
         }
 
         if ($instance->display != OMPDF_MANAGER_DISPLAY_INLINE) {
@@ -140,10 +152,12 @@ class mod_ompdf_renderer extends plugin_renderer_base {
      */
     private function util_get_area_tree($contextid, $areaname) {
         $fs = get_file_storage();
-        return $fs->get_area_tree($contextid,
-                                  'mod_ompdf',
-                                  $areaname,
-                                  false);
+        return $fs->get_area_tree(
+            $contextid,
+            'mod_ompdf',
+            $areaname,
+            false
+        );
     }
 
     /**
@@ -154,26 +168,32 @@ class mod_ompdf_renderer extends plugin_renderer_base {
      * @param cm_info $cm
      * @return string HTML
      */
-    protected function get_pdf_folder_html(ompdf $ompdf,
-                                           cm_info $cm) {
+    protected function get_pdf_folder_html(
+        ompdf $ompdf,
+        cm_info $cm
+    ) {
         $output = '';
-        $tree = $this->util_get_area_tree($ompdf->get_context()->id,
-                                          'pdfs');
+        $tree = $this->util_get_area_tree(
+            $ompdf->get_context()->id,
+            'pdfs'
+        );
 
         $tree['dirname'] = $cm->name;
-        $toptree = array('files' => array(),
-                         'subdirs' => array($tree));
+        $toptree = ['files' => [],
+                         'subdirs' => [$tree]];
 
         $openinnewtab = $ompdf->get_instance()->openinnewtab;
         $showdownloadlinks = $ompdf->get_default_config()->showdownloadlinks;
         $readonlyprotection = !empty($ompdf->get_instance()->readonly_protection);
 
-        $output .= $this->htmlize_folder($tree,
-                                         $toptree,
-                                         $openinnewtab,
-                                         $showdownloadlinks,
-                                         $cm,
-                                         $readonlyprotection);
+        $output .= $this->htmlize_folder(
+            $tree,
+            $toptree,
+            $openinnewtab,
+            $showdownloadlinks,
+            $cm,
+            $readonlyprotection
+        );
 
         return $output;
     }
@@ -189,13 +209,15 @@ class mod_ompdf_renderer extends plugin_renderer_base {
      * @param boolean $readonlyprotection
      * @return string HTML
      */
-    protected function htmlize_folder($tree,
-                                      $dir,
-                                      $openinnewtab,
-                                      $showdownloadlinks,
-                                      $cm = null,
-                                      $readonlyprotection = false) {
-        if (empty($dir['subdirs']) and empty($dir['files'])) {
+    protected function htmlize_folder(
+        $tree,
+        $dir,
+        $openinnewtab,
+        $showdownloadlinks,
+        $cm = null,
+        $readonlyprotection = false
+    ) {
+        if (empty($dir['subdirs']) && empty($dir['files'])) {
             return '';
         }
 
@@ -203,31 +225,43 @@ class mod_ompdf_renderer extends plugin_renderer_base {
         $output = '<ul>';
 
         foreach ($dir['subdirs'] as $subdir) {
-            $icon = new pix_icon(file_folder_icon(24),
-                                 $subdir['dirname'],
-                                 'moodle');
+            $icon = new pix_icon(
+                file_folder_icon(24),
+                $subdir['dirname'],
+                'moodle'
+            );
             $imagehtml = $this->output->render($icon);
             $iconhtml = html_writer::tag(
                 'span',
                 $imagehtml,
-                array('class' => 'fp-icon'));
+                ['class' => 'fp-icon']
+            );
             $namehtml = html_writer::tag(
                 'span',
                 s($subdir['dirname']),
-                array('class' => 'fp-filename'));
+                ['class' => 'fp-filename']
+            );
             $summaryhtml = html_writer::tag(
                 'summary',
-                $iconhtml . $namehtml ,
-                array('class' => 'fp-filename-icon ompdf-folder-summary'));
+                $iconhtml . $namehtml,
+                ['class' => 'fp-filename-icon ompdf-folder-summary']
+            );
 
-            $childrenhtml = $this->htmlize_folder($tree,
-                                                  $subdir,
-                                                  $openinnewtab,
-                                                  $showdownloadlinks,
-                                                  $cm,
-                                                  $readonlyprotection);
+            $childrenhtml = $this->htmlize_folder(
+                $tree,
+                $subdir,
+                $openinnewtab,
+                $showdownloadlinks,
+                $cm,
+                $readonlyprotection
+            );
 
-            $detailshtml = html_writer::tag('details', $summaryhtml . $childrenhtml, array('class' => 'ompdf-folder-details', 'open' => 'open'));
+            $detailsattributes = ['class' => 'ompdf-folder-details', 'open' => 'open'];
+            $detailshtml = html_writer::tag(
+                'details',
+                $summaryhtml . $childrenhtml,
+                $detailsattributes
+            );
 
             $output .= html_writer::tag('li', $detailshtml);
         }
@@ -241,7 +275,8 @@ class mod_ompdf_renderer extends plugin_renderer_base {
                 $pdf->get_itemid(),
                 $pdf->get_filepath(),
                 $filename,
-                false);
+                false
+            );
 
             $fileurlforcedownload = moodle_url::make_pluginfile_url(
                 $pdf->get_contextid(),
@@ -250,20 +285,24 @@ class mod_ompdf_renderer extends plugin_renderer_base {
                 $pdf->get_itemid(),
                 $pdf->get_filepath(),
                 $filename,
-                true);
+                true
+            );
 
             if (file_extension_in_typegroup($filename, 'web_image')) {
                 $image = $fileurl->out(
                     false,
-                    array('preview' => 'tinyicon',
-                          'oid' => $pdf->get_timemodified()));
-                $image = html_writer::empty_tag('img', array('src' => $image));
+                    ['preview' => 'tinyicon',
+                    'oid' => $pdf->get_timemodified()]
+                );
+                $image = html_writer::empty_tag('img', ['src' => $image]);
                 $url = $fileurl;
                 $isimage = true;
             } else {
-                $icon = new pix_icon(file_file_icon($pdf, 24),
-                                     $filename,
-                                     'moodle');
+                $icon = new pix_icon(
+                    file_file_icon($pdf, 24),
+                    $filename,
+                    'moodle'
+                );
                 $image = $this->output->render($icon);
 
                 $ompdfurl = new moodle_url('/mod/ompdf/pdfjs/web/viewer.html');
@@ -272,7 +311,7 @@ class mod_ompdf_renderer extends plugin_renderer_base {
                 $disableprint = get_config('ompdf', 'disable_print_save');
                 $enablewatermark = get_config('ompdf', 'enable_watermark');
 
-                $params = array();
+                $params = [];
                 if ($enableenc !== '0') {
                     $params['file'] = \mod_ompdf\security::encrypt_url($plainurl, (int)$cmid);
                     $params['enc'] = '1';
@@ -304,36 +343,45 @@ class mod_ompdf_renderer extends plugin_renderer_base {
                 $isimage = false;
             }
 
-            $linkoptions = array(
+            $linkoptions = [
                 'class' => 'ompdf-preview-link',
                 'data-viewer-url' => $url->out(false),
-                'data-filename' => s($filename)
-            );
+                'data-filename' => s($filename),
+            ];
             if ($openinnewtab) {
                 $linkoptions['target'] = '_blank';
             }
 
             $fileicon = html_writer::tag(
-                'span', $image, array('class' => 'fp-icon'));
+                'span',
+                $image,
+                ['class' => 'fp-icon']
+            );
             $filenamespan = html_writer::tag(
-                'span', $filename, array('class' => 'fp-filename'));
+                'span',
+                $filename,
+                ['class' => 'fp-filename']
+            );
             $filelink = html_writer::link(
                 $url,
                 $fileicon . $filenamespan,
-                $linkoptions);
+                $linkoptions
+            );
 
             if (!$isimage && $showdownloadlinks && empty($isreadonly)) {
                 $downloadlink = html_writer::link(
                     $fileurlforcedownload,
                     get_string('downloadlinktext', 'ompdf'),
-                    array('target' => '_blank'));
+                    ['target' => '_blank']
+                );
                 $filelink .= ' ' . html_writer::tag('em', '(' . $downloadlink . ')');
             }
 
             $filespan = html_writer::tag(
                 'span',
                 $filelink,
-                array('class' => 'fp-filename-icon'));
+                ['class' => 'fp-filename-icon']
+            );
 
             $output .= html_writer::tag('li', $filespan);
         }
@@ -355,8 +403,10 @@ class mod_ompdf_renderer extends plugin_renderer_base {
 
         // Open folder div.
         $id = 'ompdf_manager_' . ($treecounter++);
-        $output .= $this->output->container_start('ompdf-onyet filemanager',
-                                                  $id);
+        $output .= $this->output->container_start(
+            'ompdf-onyet filemanager',
+            $id
+        );
 
         // Elements for folder.
         $output .= $this->get_pdf_folder_html($ompdf, $cm);
@@ -364,20 +414,36 @@ class mod_ompdf_renderer extends plugin_renderer_base {
         // Close folder div.
         $output .= $this->output->container_end();
 
-        // OMPDF Quick Preview Modal Container
+        // OMPDF quick preview modal container.
         $output .= '
-        <div class="modal fade" id="ompdfPreviewModal" tabindex="-1" aria-labelledby="ompdfPreviewModalLabel" aria-hidden="true" style="z-index: 1055;">
-          <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 92vw; height: 90vh;">
-            <div class="modal-content" style="height: 100%; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.35); border: none;">
-              <div class="modal-header" style="background: #1e293b; color: #fff; padding: 0.75rem 1.25rem;">
-                <h5 class="modal-title d-flex align-items-center gap-2" id="ompdfPreviewModalLabel" style="font-size: 1.1rem; font-weight: 600; margin: 0;">
+        <div class="modal fade" id="ompdfPreviewModal" tabindex="-1"
+             aria-labelledby="ompdfPreviewModalLabel" aria-hidden="true"
+             style="z-index: 1055;">
+          <div class="modal-dialog modal-xl modal-dialog-centered"
+               style="max-width: 92vw; height: 90vh;">
+            <div class="modal-content"
+                 style="height: 100%; border-radius: 12px; overflow: hidden;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.35); border: none;">
+              <div class="modal-header"
+                   style="background: #1e293b; color: #fff;
+                          padding: 0.75rem 1.25rem;">
+                <h5 class="modal-title d-flex align-items-center gap-2"
+                    id="ompdfPreviewModalLabel"
+                    style="font-size: 1.1rem; font-weight: 600; margin: 0;">
                   <span>📄 PDF Quick Preview</span>
                 </h5>
                 <div class="d-flex align-items-center" style="gap: 10px;">
-                  <a id="ompdfOpenNewTabBtn" href="#" target="_blank" class="btn btn-sm btn-primary d-flex align-items-center gap-1" style="font-size: 0.85rem; font-weight: 500;">
+                  <a id="ompdfOpenNewTabBtn" href="#" target="_blank"
+                     class="btn btn-sm btn-primary d-flex align-items-center gap-1"
+                     style="font-size: 0.85rem; font-weight: 500;">
                     <span>↗️ Open Fullscreen in New Tab</span>
                   </a>
-                  <button type="button" id="ompdfCloseModalBtn" class="btn btn-sm btn-outline-light" aria-label="Close" style="font-size: 1.1rem; font-weight: bold; line-height: 1; padding: 2px 8px; border-radius: 4px; cursor: pointer; color: #ffffff; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);">✕</button>
+                  <button type="button" id="ompdfCloseModalBtn"
+                          class="btn btn-sm btn-outline-light" aria-label="Close"
+                          style="font-size: 1.1rem; font-weight: bold; line-height: 1;
+                                 padding: 2px 8px; border-radius: 4px; cursor: pointer;
+                                 color: #ffffff; background: rgba(255,255,255,0.15);
+                                 border: 1px solid rgba(255,255,255,0.3);">✕</button>
                 </div>
               </div>
               <div class="modal-body p-0" style="background: #0f172a; flex: 1; position: relative; height: calc(100% - 56px);">
@@ -448,10 +514,10 @@ class mod_ompdf_renderer extends plugin_renderer_base {
             };
 
             document.addEventListener("click", function(e) {
-                if (e.target.closest("#ompdfCloseModalBtn") || 
+                if (e.target.closest("#ompdfCloseModalBtn") ||
                     e.target.closest("#ompdfOpenNewTabBtn") ||
-                    e.target.closest("#ompdfModalBackdrop") || 
-                    e.target.closest("[data-bs-dismiss=\"modal\"]") || 
+                    e.target.closest("#ompdfModalBackdrop") ||
+                    e.target.closest("[data-bs-dismiss=\"modal\"]") ||
                     e.target.closest("[data-dismiss=\"modal\"]") ||
                     (e.target.id === "ompdfPreviewModal")) {
                     window.closeOmpdfModal();
@@ -478,7 +544,7 @@ class mod_ompdf_renderer extends plugin_renderer_base {
             $showexpanded = false;
         }
 
-        $this->page->requires->js_call_amd('mod_ompdf/tree', 'init', array($id, $showexpanded));
+        $this->page->requires->js_call_amd('mod_ompdf/tree', 'init', [$id, $showexpanded]);
         return $output;
     }
 }

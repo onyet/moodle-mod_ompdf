@@ -52,7 +52,7 @@ if (!empty($payload['cmid'])) {
     $cmid = (int)$payload['cmid'];
     $cm = get_coursemodule_from_id('ompdf', $cmid, 0, false, IGNORE_MISSING);
     if ($cm) {
-        $course = $DB->get_record('course', array('id' => $cm->course), '*', IGNORE_MISSING);
+        $course = $DB->get_record('course', ['id' => $cm->course], '*', IGNORE_MISSING);
         if ($course) {
             require_login($course, true, $cm);
         }
@@ -65,11 +65,11 @@ if (isset($_GET['json'])) {
     exit;
 }
 
-// Direct stream optimization: extract pluginfile path to avoid 302 redirect
-$pluginfile_marker = '/pluginfile.php/';
-$pos = strpos($url, $pluginfile_marker);
+// Direct stream optimization: extract pluginfile path to avoid a 302 redirect.
+$pluginfilemarker = '/pluginfile.php/';
+$pos = strpos($url, $pluginfilemarker);
 if ($pos !== false) {
-    $path = substr($url, $pos + strlen($pluginfile_marker));
+    $path = substr($url, $pos + strlen($pluginfilemarker));
     $parts = explode('/', $path);
     if (count($parts) >= 5) {
         $contextid = (int)$parts[0];
@@ -86,7 +86,7 @@ if ($pos !== false) {
         $storedfile = $fs->get_file($contextid, $component, $filearea, $itemid, $filepath, $filename);
 
         if (!$storedfile) {
-            // Fallback match file in area by filename
+            // Fallback: match file in area by filename.
             $files = $fs->get_area_files($contextid, $component, $filearea, false, "id ASC", false);
             foreach ($files as $f) {
                 if (!$f->is_directory() && $f->get_filename() === $filename) {
@@ -103,5 +103,5 @@ if ($pos !== false) {
     }
 }
 
-// Fallback if parsing fails or external URL
+// Fallback if parsing fails or the URL is external.
 redirect($url);

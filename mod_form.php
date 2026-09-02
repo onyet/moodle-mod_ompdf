@@ -31,6 +31,9 @@ require_once($CFG->dirroot . '/course/moodleform_mod.php');
 require_once(dirname(__FILE__) . '/locallib.php');
 require_once($CFG->libdir . '/filelib.php');
 
+/**
+ * OMPDF activity configuration form.
+ */
 class mod_ompdf_mod_form extends moodleform_mod {
     /**
      * Defines the ompdf instance configuration form.
@@ -44,23 +47,30 @@ class mod_ompdf_mod_form extends moodleform_mod {
         $mform =& $this->_form;
 
         // Name and description fields.
-        $mform->addElement('header',
-                           'general',
-                           get_string('general', 'form'));
-        $mform->addElement('text',
-                           'name',
-                           get_string('name'), array('size' => '48'));
+        $mform->addElement(
+            'header',
+            'general',
+            get_string('general', 'form')
+        );
+        $mform->addElement(
+            'text',
+            'name',
+            get_string('name'),
+            ['size' => '48']
+        );
         if (!empty($CFG->formatstringstriptags)) {
             $mform->setType('name', PARAM_TEXT);
         } else {
             $mform->setType('name', PARAM_CLEANHTML);
         }
         $mform->addRule('name', null, 'required', null, 'client');
-        $mform->addRule('name',
-                        get_string('maximumchars', '', 255),
-                        'maxlength',
-                        255,
-                        'client');
+        $mform->addRule(
+            'name',
+            get_string('maximumchars', '', 255),
+            'maxlength',
+            255,
+            'client'
+        );
         $this->add_intro_editor(false);
 
         // Option for showing folder inline or on separate page.
@@ -68,47 +78,60 @@ class mod_ompdf_mod_form extends moodleform_mod {
             'select',
             'display',
             get_string('display', 'ompdf'),
-            array(OMPDF_MANAGER_DISPLAY_PAGE => get_string('displaypage', 'ompdf'),
-                  OMPDF_MANAGER_DISPLAY_INLINE => get_string('displayinline', 'ompdf')));
+            [OMPDF_MANAGER_DISPLAY_PAGE => get_string('displaypage', 'ompdf'),
+            OMPDF_MANAGER_DISPLAY_INLINE => get_string(
+                'displayinline',
+                'ompdf'
+            )]
+        );
         $mform->addHelpButton('display', 'display', 'ompdf');
 
         // Option for showing sub-folders expanded or collapsed.
-        $mform->addElement('advcheckbox',
-                           'showexpanded',
-                           get_string('showexpanded', 'ompdf'));
+        $mform->addElement(
+            'advcheckbox',
+            'showexpanded',
+            get_string('showexpanded', 'ompdf')
+        );
         $mform->addHelpButton('showexpanded', 'showexpanded', 'ompdf');
         $mform->setDefault('showexpanded', $config->showexpanded);
 
         // Option for opening PDFs in new tabs or windows.
-        $mform->addElement('advcheckbox',
-                           'openinnewtab',
-                           get_string('openinnewtab', 'ompdf'));
+        $mform->addElement(
+            'advcheckbox',
+            'openinnewtab',
+            get_string('openinnewtab', 'ompdf')
+        );
         $mform->addHelpButton('openinnewtab', 'openinnewtab', 'ompdf');
         $mform->setDefault('openinnewtab', $config->openinnewtab);
 
         // Option for Read-Only DRM Protection.
-        $mform->addElement('advcheckbox',
-                           'readonly_protection',
-                           get_string('readonly_protection', 'ompdf'));
+        $mform->addElement(
+            'advcheckbox',
+            'readonly_protection',
+            get_string('readonly_protection', 'ompdf')
+        );
         $mform->addHelpButton('readonly_protection', 'readonly_protection', 'ompdf');
         $mform->setDefault('readonly_protection', 0);
 
         // Folder fields.
-        $mform->addElement('header',
-                           'pdf_fieldset',
-                           get_string('pdf_fieldset', 'ompdf'));
+        $mform->addElement(
+            'header',
+            'pdf_fieldset',
+            get_string('pdf_fieldset', 'ompdf')
+        );
 
         // Folder file manager.
-        $options = array('subdirs' => true,
+        $options = ['subdirs' => true,
                          'maxbytes' => 0,
                          'maxfiles' => -1,
-                         'accepted_types' => array('.pdf', '.zip', 'web_image'));
+                         'accepted_types' => ['.pdf', '.zip', 'web_image']];
         $mform->addElement(
             'filemanager',
             'pdfs',
             get_string('pdfs', 'ompdf'),
             null,
-            $options);
+            $options
+        );
         $mform->addHelpButton('pdfs', 'pdfs', 'ompdf');
         $mform->addRule('pdfs', null, 'required', null, 'client');
 
@@ -127,16 +150,18 @@ class mod_ompdf_mod_form extends moodleform_mod {
      */
     public function data_preprocessing(&$defaultvalues) {
         if ($this->current->instance) {
-            $options = array('subdirs' => true,
+            $options = ['subdirs' => true,
                              'maxbytes' => 0,
-                             'maxfiles' => -1);
+                             'maxfiles' => -1];
             $draftitemid = file_get_submitted_draft_itemid('pdfs');
-            file_prepare_draft_area($draftitemid,
-                                    $this->context->id,
-                                    'mod_ompdf',
-                                    'pdfs',
-                                    0,
-                                    $options);
+            file_prepare_draft_area(
+                $draftitemid,
+                $this->context->id,
+                'mod_ompdf',
+                'pdfs',
+                0,
+                $options
+            );
             $defaultvalues['pdfs'] = $draftitemid;
         }
     }
@@ -149,15 +174,17 @@ class mod_ompdf_mod_form extends moodleform_mod {
      * @return array eventual errors indexed by the field name
      */
     public function validation($data, $files) {
-        $errors = array();
+        $errors = [];
 
         // On-view completion can not work together with display
         // inline option.
-        if (empty($errors['completion']) &&
+        if (
+            empty($errors['completion']) &&
                 array_key_exists('completion', $data) &&
                 $data['completion'] == COMPLETION_TRACKING_AUTOMATIC &&
                 !empty($data['completionview']) &&
-                $data['display'] == OMPDF_MANAGER_DISPLAY_INLINE) {
+                $data['display'] == OMPDF_MANAGER_DISPLAY_INLINE
+        ) {
             $errors['completion'] = get_string('noautocompletioninline', 'ompdf');
         }
 
