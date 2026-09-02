@@ -1,0 +1,41 @@
+{{!
+    @template mod_ompdf/folder
+
+    Recursive PDF folder tree.
+
+    Example context (json):
+    {
+        "hascontent": true,
+        "subdirs": [],
+        "files": []
+    }
+}}
+{{#hascontent}}
+<ul>
+    {{#subdirs}}
+    <li>
+        <details class="ompdf-folder-details"{{#open}} open{{/open}}>
+            <summary class="fp-filename-icon ompdf-folder-summary">
+                <span class="fp-icon">{{{icon}}}</span>
+                <span class="fp-filename">{{name}}</span>
+            </summary>
+            {{> mod_ompdf/folder}}
+        </details>
+    </li>
+    {{/subdirs}}
+    {{#files}}
+    <li>
+        <span class="fp-filename-icon">
+            <a href="{{url}}" class="ompdf-preview-link"{{#newtab}} target="_blank"{{/newtab}}
+               data-viewer-url="{{viewerurl}}" data-filename="{{filename}}">
+                <span class="fp-icon">{{{icon}}}</span>
+                <span class="fp-filename">{{filename}}</span>
+            </a>
+            {{#download}}
+            <em>(<a href="{{downloadurl}}" target="_blank">{{downloadtext}}</a>)</em>
+            {{/download}}
+        </span>
+    </li>
+    {{/files}}
+</ul>
+{{/hascontent}}

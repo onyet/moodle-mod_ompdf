@@ -184,19 +184,153 @@ class mod_ompdf_renderer extends plugin_renderer_base {
                          'subdirs' => [$tree]];
 
         $openinnewtab = $ompdf->get_instance()->openinnewtab;
+        $showexpanded = !empty($ompdf->get_instance()->showexpanded);
         $showdownloadlinks = $ompdf->get_default_config()->showdownloadlinks;
         $readonlyprotection = !empty($ompdf->get_instance()->readonly_protection);
 
-        $output .= $this->htmlize_folder(
-            $tree,
-            $toptree,
-            $openinnewtab,
-            $showdownloadlinks,
-            $cm,
-            $readonlyprotection
+        $output .= $this->output->render_from_template(
+            'mod_ompdf/folder',
+            $this->get_folder_template_data(
+                $toptree,
+                $ompdf,
+                $openinnewtab,
+                $showexpanded,
+                $showdownloadlinks,
+                $cm,
+                $readonlyprotection
+            )
         );
 
         return $output;
+    }
+
+    /**
+     * Builds the data structure used by the recursive folder template.
+     *
+     * @param array $dir Folder data.
+     * @param ompdf $ompdf OMPDF instance.
+     * @param bool $openinnewtab Whether file links open in a new tab.
+     * @param bool $showexpanded Whether folders are expanded by default.
+     * @param bool $showdownloadlinks Whether download links are shown.
+     * @param cm_info|null $cm Course module information.
+     * @param bool $readonlyprotection Whether download links are disabled.
+     * @return array Folder template data.
+     */
+    protected function get_folder_template_data(
+        array $dir,
+        ompdf $ompdf,
+        bool $openinnewtab,
+        bool $showexpanded,
+        bool $showdownloadlinks,
+        ?cm_info $cm,
+        bool $readonlyprotection
+    ): array {
+        $data = ['hascontent' => !empty($dir['subdirs']) || !empty($dir['files']), 'subdirs' => [], 'files' => []];
+        foreach ($dir['subdirs'] as $subdir) {
+            $icon = new pix_icon(file_folder_icon(24), $subdir['dirname'], 'moodle');
+            $children = $this->get_folder_template_data(
+                $subdir,
+                $ompdf,
+                $openinnewtab,
+                $showexpanded,
+                $showdownloadlinks,
+                $cm,
+                $readonlyprotection
+            );
+            $data['subdirs'][] = [
+                'name' => $subdir['dirname'],
+                'icon' => $this->output->render($icon),
+                'open' => $showexpanded,
+                'subdirs' => $children['subdirs'],
+                'files' => $children['files'],
+                'hascontent' => $children['hascontent'],
+            ];
+        }
+
+        foreach ($dir['files'] as $pdf) {
+            $filename = $pdf->get_filename();
+            $fileurl = moodle_url::make_pluginfile_url(
+                $pdf->get_contextid(),
+                $pdf->get_component(),
+                $pdf->get_filearea(),
+                $pdf->get_itemid(),
+                $pdf->get_filepath(),
+                $filename,
+                false
+            );
+            $downloadurl = moodle_url::make_pluginfile_url(
+                $pdf->get_contextid(),
+                $pdf->get_component(),
+                $pdf->get_filearea(),
+                $pdf->get_itemid(),
+                $pdf->get_filepath(),
+                $filename,
+                true
+            );
+            if (file_extension_in_typegroup($filename, 'web_image')) {
+                $imageurl = $fileurl->out(false, ['preview' => 'tinyicon', 'oid' => $pdf->get_timemodified()]);
+                $icon = html_writer::empty_tag('img', ['src' => $imageurl]);
+                $viewerurl = $fileurl->out(false);
+            } else {
+                $pixicon = new pix_icon(file_file_icon($pdf, 24), $filename, 'moodle');
+                $icon = $this->output->render($pixicon);
+                $viewerurl = $this->get_viewer_url($fileurl, $ompdf, $cm);
+            }
+            $data['files'][] = [
+                'filename' => $filename,
+                'url' => $viewerurl,
+                'viewerurl' => $viewerurl,
+                'icon' => $icon,
+                'newtab' => $openinnewtab,
+                'download' => !$readonlyprotection && $showdownloadlinks
+                    && !file_extension_in_typegroup($filename, 'web_image'),
+                'downloadurl' => $downloadurl->out(false),
+                'downloadtext' => get_string('downloadlinktext', 'ompdf'),
+            ];
+        }
+        return $data;
+    }
+
+    /**
+     * Builds the PDF.js viewer URL for a stored file.
+     *
+     * @param moodle_url $fileurl Original plugin file URL.
+     * @param ompdf $ompdf OMPDF instance.
+     * @param cm_info|null $cm Course module information.
+     * @return moodle_url Viewer URL.
+     */
+    protected function get_viewer_url(
+        moodle_url $fileurl,
+        ompdf $ompdf,
+        ?cm_info $cm
+    ): moodle_url {
+        $params = [];
+        $plainurl = $fileurl->out(false);
+        if (get_config('ompdf', 'enable_encryption') !== '0') {
+            $params['file'] = \mod_ompdf\security::encrypt_url($plainurl, (int)$cm->id);
+            $params['enc'] = '1';
+        } else {
+            $params['file'] = $plainurl;
+        }
+        if (
+            !empty(get_config('ompdf', 'disable_print_save'))
+                || !empty($ompdf->get_instance()->readonly_protection)
+        ) {
+            $params['drm'] = '1';
+        }
+        if (!empty(get_config('ompdf', 'enable_watermark'))) {
+            global $USER;
+            $params['wm'] = urlencode(fullname($USER) . ' | ' . get_remote_addr() . ' | ' . date('Y-m-d'));
+        }
+        if ($cm) {
+            $params['cmid'] = (int)$cm->id;
+            $params['sesskey'] = sesskey();
+            $lastpage = (int)get_user_preferences('mod_ompdf_lastpage_' . $cm->id, 1);
+            if ($lastpage > 1) {
+                $params['lastpage'] = $lastpage;
+            }
+        }
+        return new moodle_url('/mod/ompdf/pdfjs/web/viewer.html', $params);
     }
 
     /**
