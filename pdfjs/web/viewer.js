@@ -683,7 +683,9 @@ const PDFViewerApplication = {
           pageStartTime = now;
           const total = PDFViewerApplication.pagesCount || 1;
           fetch(apiUrl + '?action=track_progress&cmid=' + cmid + '&page=' + pageToTrack + '&total=' + total + '&duration=' + durationSec, {
-            credentials: 'same-origin'
+            method: 'POST',
+            credentials: 'same-origin',
+            body: new URLSearchParams({ sesskey: params.get("sesskey") })
           }).catch(function(err) {});
         }
       };
@@ -775,7 +777,11 @@ const PDFViewerApplication = {
                     del.textContent = '✖';
                     del.title = 'Delete Note';
                     del.onclick = function() {
-                      fetch(apiUrl + '?action=delete_annotation&cmid=' + cmid + '&id=' + ann.id, { credentials: 'same-origin' })
+                      fetch(apiUrl + '?action=delete_annotation&cmid=' + cmid + '&id=' + ann.id, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        body: new URLSearchParams({ sesskey: params.get("sesskey") })
+                      })
                       .then(() => loadAnnotations(page));
                     };
                     meta.appendChild(del);
@@ -837,6 +843,7 @@ const PDFViewerApplication = {
           formData.append('content', text);
           formData.append('type', type);
           formData.append('color', color);
+          formData.append('sesskey', params.get("sesskey"));
 
           fetch(apiUrl, {
             method: 'POST',

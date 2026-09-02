@@ -35,6 +35,14 @@ $context = context_module::instance($cm->id);
 require_login($course, false, $cm);
 require_capability('mod/ompdf:view', $context);
 
+$statechangingactions = ['save_position', 'track_progress', 'save_annotation', 'delete_annotation'];
+if (in_array($action, $statechangingactions, true)) {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        throw new moodle_exception('invalidrequest');
+    }
+    require_sesskey();
+}
+
 switch ($action) {
     case 'save_position':
         $page = required_param('page', PARAM_INT);

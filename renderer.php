@@ -334,6 +334,7 @@ class mod_ompdf_renderer extends plugin_renderer_base {
 
                 if ($cmid > 0) {
                     $params['cmid'] = $cmid;
+                    $params['sesskey'] = sesskey();
                     $lastpage = (int)get_user_preferences('mod_ompdf_lastpage_' . $cmid, 1);
                     if ($lastpage > 1) {
                         $params['lastpage'] = $lastpage;
