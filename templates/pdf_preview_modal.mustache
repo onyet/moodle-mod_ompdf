@@ -1,0 +1,50 @@
+{{!
+    @template mod_ompdf/pdf_preview_modal
+
+    PDF quick preview modal.
+
+    Example context (json):
+    {
+        "previewtitle": "PDF Quick Preview",
+        "opennewtab": "Open Fullscreen in New Tab",
+        "close": "Close"
+    }
+}}
+<div class="modal fade" id="ompdfPreviewModal" tabindex="-1"
+     aria-labelledby="ompdfPreviewModalLabel" aria-hidden="true"
+     style="z-index: 1055;">
+    <div class="modal-dialog modal-xl modal-dialog-centered"
+         style="max-width: 92vw; height: 90vh;">
+        <div class="modal-content"
+             style="height: 100%; border-radius: 12px; overflow: hidden;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.35); border: none;">
+            <div class="modal-header"
+                 style="background: #1e293b; color: #fff; padding: 0.75rem 1.25rem;">
+                <h5 class="modal-title d-flex align-items-center gap-2"
+                    id="ompdfPreviewModalLabel"
+                    style="font-size: 1.1rem; font-weight: 600; margin: 0;">
+                    <span>📄 {{previewtitle}}</span>
+                </h5>
+                <div class="d-flex align-items-center" style="gap: 10px;">
+                    <a id="ompdfOpenNewTabBtn" href="#" target="_blank"
+                       class="btn btn-sm btn-primary d-flex align-items-center gap-1"
+                       style="font-size: 0.85rem; font-weight: 500;">
+                        <span>↗️ {{opennewtab}}</span>
+                    </a>
+                    <button type="button" id="ompdfCloseModalBtn"
+                            class="btn btn-sm btn-outline-light"
+                            aria-label="{{close}}"
+                            style="font-size: 1.1rem; font-weight: bold; line-height: 1;
+                                   padding: 2px 8px; border-radius: 4px; cursor: pointer;
+                                   color: #ffffff; background: rgba(255,255,255,0.15);
+                                   border: 1px solid rgba(255,255,255,0.3);">✕</button>
+                </div>
+            </div>
+            <div class="modal-body p-0"
+                 style="background: #0f172a; flex: 1; position: relative; height: calc(100% - 56px);">
+                <iframe id="ompdfPreviewIframe" src="about:blank"
+                        style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>

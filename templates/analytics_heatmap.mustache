@@ -1,0 +1,30 @@
+{{!
+    @template mod_ompdf/analytics_heatmap
+
+    Analytics reading heatmap.
+
+    Example context (json):
+    {
+        "hasdata": true,
+        "rows": [],
+        "nodata": "No data"
+    }
+}}
+{{#hasdata}}
+<div style="display: flex; flex-direction: column; gap: 10px;">
+    {{#rows}}
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <div style="width: 70px; font-weight: bold;">{{page}}</div>
+        <div style="flex-grow: 1; background: #e2e8f0; height: 24px; border-radius: 4px; overflow: hidden;">
+            <div style="width: {{width}}%; background: {{color}}; height: 100%; transition: width 0.5s;"></div>
+        </div>
+        <div style="width: 180px; text-align: right; font-size: 0.9rem; color: #475569;">
+            {{duration}} ({{readers}})
+        </div>
+    </div>
+    {{/rows}}
+</div>
+{{/hasdata}}
+{{^hasdata}}
+<div class="alert alert-secondary">{{nodata}}</div>
+{{/hasdata}}

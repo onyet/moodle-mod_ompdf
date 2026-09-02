@@ -184,9 +184,9 @@ echo html_writer::start_div('row mb-4');
     echo html_writer::div(get_string('page_reading_heatmap', 'ompdf'), 'card-header font-weight-bold');
     echo html_writer::start_div('card-body');
 
-    if (empty($pageheatmap)) {
-        echo html_writer::div(get_string('no_reading_analytics', 'ompdf'), 'alert alert-secondary');
-    } else {
+    $heatmapdata = ['hasdata' => !empty($pageheatmap), 'rows' => [],
+        'nodata' => get_string('no_reading_analytics', 'ompdf')];
+    if (!empty($pageheatmap)) {
         $maxduration = 1;
         foreach ($pageheatmap as $ph) {
             if ($ph['total_duration'] > $maxduration) {
@@ -194,7 +194,6 @@ echo html_writer::start_div('row mb-4');
             }
         }
 
-        echo '<div style="display: flex; flex-direction: column; gap: 10px;">';
         foreach ($pageheatmap as $page => $pdata) {
             $pct = round(($pdata['total_duration'] / $maxduration) * 100);
             $readercount = count($pdata['readers']);
@@ -208,18 +207,16 @@ echo html_writer::start_div('row mb-4');
                 $color = '#f59e0b';
             }
 
-            echo '<div style="display: flex; align-items: center; gap: 15px;">';
-            echo '<div style="width: 70px; font-weight: bold;">' . get_string('page', 'ompdf', $page) . '</div>';
-            echo '<div style="flex-grow: 1; background: #e2e8f0; height: 24px; border-radius: 4px; overflow: hidden;">';
-            echo '<div style="width: ' . max($pct, 4) . '%; background: ' . $color
-                . '; height: 100%; transition: width 0.5s;"></div>';
-            echo '</div>';
-            echo '<div style="width: 180px; text-align: right; font-size: 0.9rem; '
-                . 'color: #475569;">' . $durformatted . ' (' . get_string('readers', 'ompdf', $readercount) . ')</div>';
-            echo '</div>';
+            $heatmapdata['rows'][] = [
+                'page' => get_string('page', 'ompdf', $page),
+                'width' => max($pct, 4),
+                'color' => $color,
+                'duration' => $durformatted,
+                'readers' => get_string('readers', 'ompdf', $readercount),
+            ];
         }
-        echo '</div>';
     }
+    echo $OUTPUT->render_from_template('mod_ompdf/analytics_heatmap', $heatmapdata);
     echo html_writer::end_div();
     echo html_writer::end_div();
 
